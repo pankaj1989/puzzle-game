@@ -1,20 +1,27 @@
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+@import "tailwindcss";
 
 @theme {
   --color-cream: #fff8f0;
-  --color-navy: #1a232e;
+  --color-navy: #364153;
+  --color-navy-dark: #101828;
   --color-navy-soft: #2a3542;
   --color-brand-orange: #ff9f43;
-  --color-text-muted: #6b7280;
+  --color-brand-orange-dark: #e17100;
+  --color-muted: #6a7282;
   --color-text-body: #3d4550;
   --color-card-yellow: #fff9e6;
   --color-card-lavender: #f3edff;
   --color-card-blue: #e8f4ff;
   --color-card-orange: #fff0e0;
   --color-card-pink: #ffeef5;
+  --color-text-muted: #4a5565;
+  --color-cream2: #ffedd4;
+
+  --color-shadow-orange: rgba(251, 146, 60, 0.08);
   --font-sans:
-    'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+    "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 }
 
 *,
@@ -34,8 +41,23 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: var(--color-text-body);
-  background: var(--color-cream);
+  /* background: linear-gradient(
+    175deg,
+    #fffbf5 0%,
+    #fff5e9 30%,
+    #ffe8d6 60%,
+    #ffd4b8 100%
+  ); */
+  background: linear-gradient(
+    160deg,
+    #fffbf57c 0%,
+    #fff5e97c 30%,
+    #ffe8d67c 60%,
+    #ffd4b87c 100%
+  );
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  overflow-y: auto;
 }
 
 #root {
@@ -50,4 +72,24 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+.navy-gradient {
+  background: linear-gradient(90deg, #101828 0%, #1e2939 100%);
+}
+
+.orange-glow {
+  background: linear-gradient(90deg, #ff8904 0%, #e17100 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(
+    90deg,
+    #ff6900 0%,
+    #e17100 60%,
+    rgb(192, 29, 0) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

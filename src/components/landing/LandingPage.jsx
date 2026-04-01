@@ -9,7 +9,7 @@ import { LandingStatsStrip } from './LandingStatsStrip.jsx'
 
 export function LandingPage() {
   return (
-    <div className="min-h-svh bg-cream text-text-body antialiased">
+    <div className="min-h-svh text-text-body antialiased">
       <LandingHeader />
       <main>
         <LandingHero />

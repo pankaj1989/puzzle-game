@@ -1,74 +1,67 @@
-import { ArrowRightIcon } from './icons.jsx'
-
-const plates = [
-  { text: 'L8ER', className: 'left-0 top-[8%] -rotate-6' },
-  { text: 'G4MER', className: 'right-[4%] top-[18%] rotate-6' },
-  { text: 'E99R', className: 'bottom-[38%] left-[6%] rotate-3' },
-  { text: '83 ER', className: 'right-0 top-[42%] -rotate-6' },
-]
+import CtaButton from "../common/CtaButton.jsx";
+import { HERO, HERO_HIGHLIGHTS, HERO_IMAGE } from "./landingData.js";
 
 export function LandingHero() {
   return (
     <section
       id="hero"
-      className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 pb-12 pt-6 sm:px-6 lg:grid-cols-2 lg:gap-10 lg:px-8 lg:pb-16"
+      className="mx-auto flex lg:flex-row flex-col max-w-[1442px]  gap-10 px-4 sm:px-6 lg:gap-0 lg:px-[60px] pt-10 lg:pt-0 pb-10 lg:pb-28"
     >
-      <div className="min-w-0 text-center lg:text-left">
-        <h1 className="font-serif text-[clamp(2.25rem,4vw,3.25rem)] font-bold leading-[1.12] tracking-tight text-navy">
-          Crack the license plate{' '}
-          <span className="bg-gradient-to-br from-brand-orange via-[#ffb366] to-cream bg-clip-text italic text-transparent">
-            mystery
+      <div className="min-w-0 text-center lg:text-left w-full lg:w-[825px] flex flex-col justify-end pb-4">
+        <div className="font-serif text-[46px] md:text-[60px] xl:text-[80px] font-bold leading-[1.01] tracking-tight text-navy-dark flex flex-col items-center lg:items-start">
+          <span className="mb-1">{HERO.titleLines?.[0]}</span>
+          <span>{HERO.titleLines?.[1]}</span>
+          <span className="text-gradient relative w-fit pb-2 ">
+            {HERO.titleAccent}
+            <div className="absolute md:top-4 top-0 left-0 orange-glow opacity-20 blur-lg rounded-full md:w-[135%] w-full h-full" />
           </span>
-        </h1>
-        <p className="mx-auto mt-5 max-w-[34ch] text-[1.0625rem] leading-relaxed text-text-muted lg:mx-0">
-          Decode vanity plates from around the world. Reveal letters, race the clock, and climb the
-          leaderboard in the ultimate word puzzle challenge.
+        </div>
+        <p className="mx-auto mt-4 max-w-[47ch] xl:text-[18px] text-[16px] text-text-muted lg:mx-0 leading-[29px]">
+          {HERO.descPart1}
+          <span className="font-semibold"> {HERO.descPart2} </span>
+          {HERO.descPart3}
         </p>
-        <a
-          href="#pricing"
-          className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-navy px-7 py-4 text-base font-semibold text-white no-underline transition hover:bg-navy-soft hover:shadow-[0_12px_40px_rgba(26,35,46,0.12)] active:scale-[0.98]"
-        >
-          Try for Free
-          <ArrowRightIcon />
-        </a>
+        <div className="relative flex lg:hidden mt-4 xl:items-start items-center" aria-hidden="true">
+        <img
+          className="relative z-0 w-full max-w-[600px]! mx-auto lg:max-w-none! "
+          src={HERO_IMAGE.src}
+          alt=""
+          width={HERO_IMAGE.width}
+          height={HERO_IMAGE.height}
+          loading="eager"
+        />
+      </div>
+        <CtaButton
+          label={HERO.primaryCta.label}
+          className="flex px-[30px]! w-full max-w-[435px]! xl:mt-8 mt-6 mx-auto lg:mx-0"
+        />
         <ul
-          className="mt-9 flex flex-wrap justify-center gap-8 text-[0.9375rem] text-text-muted lg:justify-start lg:gap-10"
+          className="mt-6 flex flex-wrap justify-center xl:gap-14 gap-10 text-[0.75rem] text-text-muted lg:justify-start"
           aria-label="Highlights"
         >
-          <li>
-            <strong className="block text-2xl font-bold leading-tight text-navy">500</strong>
-            Challenges
-          </li>
-          <li>
-            <strong className="block text-2xl font-bold leading-tight text-navy">8</strong>
-            Categories
-          </li>
-          <li>
-            <strong className="block text-2xl font-bold leading-tight text-navy">100K</strong>
-            Total Players
-          </li>
+          {HERO_HIGHLIGHTS.map((h) => (
+            <li key={h.label}>
+              <strong className="block font-serif xl:text-[52px] sm:text-[40px] text-[32px] font-bold leading-tight text-navy-dark">
+                {h.value}
+                {h.valueSuffix && <span className="text-brand-orange-dark">{h.valueSuffix}</span>}
+              </strong>
+              <span className="xl:text-[14px] sm:text-[12px] text-[10px] tracking-[0.35px] leading-tight">
+                {h.label}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
-      <div className="relative flex items-end justify-center" aria-hidden="true">
-        <div className="pointer-events-none absolute inset-0 z-[1] max-md:hidden">
-          {plates.map((p) => (
-            <span
-              key={p.text}
-              className={`absolute rounded-lg border-2 border-navy/[0.08] bg-white px-3 py-2 font-sans text-xs font-extrabold tracking-wide text-navy shadow-[0_4px_16px_rgba(26,35,46,0.12)] ${p.className}`}
-            >
-              {p.text}
-            </span>
-          ))}
-        </div>
+      <div className="relative hidden  lg:flex xl:items-start items-center" aria-hidden="true">
         <img
-          className="relative z-0 w-full max-w-[520px] drop-shadow-[0_20px_40px_rgba(26,35,46,0.12)]"
-          src="/hero-illustration.png"
+          className="relative z-0 w-full max-w-[600px]! mx-auto lg:max-w-none! "
+          src={HERO_IMAGE.src}
           alt=""
-          width={560}
-          height={420}
+          width={HERO_IMAGE.width}
+          height={HERO_IMAGE.height}
           loading="eager"
         />
       </div>
     </section>
-  )
+  );
 }
