@@ -67,20 +67,22 @@ export const FEATURES = [
   {
     title: "Dynamic Letter Reveals",
     body: "Watch as letters appear every 3 seconds. Use quick thinking and pattern recognition to solve puzzles faster.",
-    bg: "bg-card-yellow",
+    bg: "cream-gradient",
+    borderColor: "#FEF9C2",
     imageSrc: "/landing/feature1.png",
   },
   {
     title: "Eight Categories",
     body: "From blockbuster movies to chart-topping music, sports legends to tech innovations. Premium unlocks them all.",
-    bg: "bg-card-lavender",
+    bg: "purple-gradient",
+    borderColor: "#F3E8FF",
     imageSrc: "/landing/feature2.png",
   },
   {
     title: "Premium Experience",
     body: "Enjoy ad-free gameplay, choose any category, access exclusive puzzles, and compete on leaderboards.",
-    bg: "bg-white",
-    cardClassName: "border border-navy/[0.06]",
+    bg: "blue-gradient",
+    borderColor: "#E5E7EB",
     imageSrc: "/landing/feature3.png",
   },
 ];

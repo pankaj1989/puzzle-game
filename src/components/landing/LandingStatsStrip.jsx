@@ -3,7 +3,7 @@ import { COMMUNITY_STATS, COMMUNITY_STATS_HEADING } from "./landingData.js";
 export function LandingStatsStrip() {
   return (
     <section
-      className="mx-auto mb-14 max-w-[1442px] px-5 sm:px-6 lg:px-[60px]"
+      className="mx-auto pb-15 max-w-[1442px] px-5 sm:px-6 lg:px-[60px]"
       aria-label="Community stats"
     >
       <div className="rounded-[40px] bg-[#ffffff]/70 border border-cream2  shadow-[0_10px_20px_var(--color-shadow-orange)] p-[49px] pb-[79px] xl:aspect-[3/0.7]">

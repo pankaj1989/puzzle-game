@@ -17,8 +17,12 @@
   --color-card-pink: #ffeef5;
   --color-text-muted: #4a5565;
   --color-cream2: #ffedd4;
-
+  --color-brand-brown: #7b3306;
   --color-shadow-orange: rgba(251, 146, 60, 0.08);
+  --color-card-yellow2: #fef3c6;
+  --color-card-yellow3: #fef9c2;
+  --color-card-purple: #f3e8ff;
+  --color-card-blue2: #e5e7eb;
   --font-sans:
     "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
@@ -92,4 +96,16 @@ img {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.cream-gradient {
+  background: linear-gradient(120deg, #fefce8 0%, #fff7ed 100%);
+}
+
+.purple-gradient {
+  background: linear-gradient(120deg, #faf5ff 0%, #fdf2f8 100%);
+}
+
+.blue-gradient {
+  background: linear-gradient(120deg, #f9fafb 0%, #f8fafc 100%);
 }
