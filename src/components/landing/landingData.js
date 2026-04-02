@@ -92,25 +92,29 @@ export const HOW_STEPS = [
     num: "01",
     titleLines: ["Choose Category"],
     body: "Select from 8 categories or let us pick randomly for free users.",
-    bg: "bg-card-yellow",
+    bg: "cream-gradient2",
+    borderColor: "#FFEDD4",
   },
   {
     num: "02",
     titleLines: ["Watch Letters", "Reveal"],
     body: "Letters appear every 3 seconds. Use the visual clue to help you decode.",
-    bg: "bg-card-yellow",
+    bg: "cream-gradient",
+    borderColor: "#FEF9C2",
   },
   {
     num: "03",
     titleLines: ["Solve the Puzzle"],
     body: "Type your answer before the timer runs out. Think fast, think smart.",
-    bg: "bg-card-lavender",
+    bg: "purple-gradient",
+    borderColor: "#F3E8FF",
   },
   {
     num: "04",
     titleLines: ["Earn Points"],
     body: "Faster solves mean more points. Compete on leaderboards.",
-    bg: "bg-card-blue",
+    bg: "blue-gradient",
+    borderColor: "#E5E7EB",
   },
 ];
 

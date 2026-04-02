@@ -7,10 +7,10 @@ export function LandingFeatures() {
         <span className="inline-flex rounded-full bg-card-yellow2 px-4 py-[6px] text-[13px] font-semibold uppercase tracking-[1.3px] text-brand-brown">
           {FEATURES_SECTION.badge}
         </span>
-        <h2 className="font-serif md:text-[64px] text-[40px] font-semibold leading-[1.2] text-navy-dark max-w-[38rem]!">
+        <h2 className="font-serif md:text-[64px] text-[40px] font-semibold leading-[1.24] text-navy-dark max-w-[38rem]!">
           {SECTION_TITLES.features}
         </h2>
-        <p className="mx-auto mt-1.5 md:max-w-[38rem] max-w-[20rem] text-sm leading-relaxed text-text-muted sm:text-[19px]">
+        <p className="mx-auto mt-1.5 md:max-w-[38rem] max-w-[20rem] text-sm leading-relaxed text-text-muted sm:text-[19px] tracking-[0.255px]">
           {FEATURES_SECTION.subheading}
         </p>
       </div>
@@ -18,7 +18,7 @@ export function LandingFeatures() {
         {FEATURES.map((f) => (
           <article
             key={f.title}
-            className={`rounded-[32px] p-8 xl:p-12 shadow-[0_12px_40px_rgba(26,35,46,0.08)] transition-shadow hover:shadow-[0_16px_48px_rgba(26,35,46,0.12)] ${f.bg} border `}
+            className={`rounded-[32px] p-8 xl:p-12 shadow-[0_2px_30px_rgba(26,35,46,0.05)] transition-shadow hover:shadow-[0_16px_48px_rgba(26,35,46,0.12)] ${f.bg} border-2 `}
             style={{ borderColor: `${f.borderColor}` }}
           >
             <div
@@ -34,7 +34,7 @@ export function LandingFeatures() {
                 loading="lazy"
               />
             </div>
-            <h3 className="font-serif xl:text-[28px] text-[24px] font-bold tracking-tight text-navy">{f.title}</h3>
+            <h3 className="font-serif xl:text-[28px] text-[24px] font-bold text-navy">{f.title}</h3>
             <p className="xl:mt-5 mt-3 leading-relaxed text-text-muted xl:text-[16px] text-[14px] max-w-[19rem]!">{f.body}</p>
           </article>
         ))}

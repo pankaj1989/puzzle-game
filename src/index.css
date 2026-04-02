@@ -23,6 +23,13 @@
   --color-card-yellow3: #fef9c2;
   --color-card-purple: #f3e8ff;
   --color-card-blue2: #e5e7eb;
+  --color-card-purple2: #59168b;
+  --color-card-gray: #f3f4f6;
+  --color-text-muted2: #99A1AF;
+  --color-card-gray2: #D1D5DC;
+  --color-brand-orange2: #FE9A00;
+  --color-brand-orange3: #FE9900;
+
   --font-sans:
     "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
@@ -55,8 +62,8 @@ body {
   background: linear-gradient(
     160deg,
     #fffbf57c 0%,
-    #fff5e97c 30%,
-    #ffe8d67c 60%,
+    #fff5e97c 40%,
+    #ffe8d67c 50%,
     #ffd4b87c 100%
   );
   background-attachment: fixed;
@@ -82,9 +89,18 @@ img {
   background: linear-gradient(90deg, #101828 0%, #1e2939 100%);
 }
 
+.navy-gradient2 {
+  background: linear-gradient(45deg, #101828 0%, #101828 50%, #1e2939 100%);
+}
+
 .orange-glow {
   background: linear-gradient(90deg, #ff8904 0%, #e17100 100%);
 }
+
+.orange-glow2 {
+  background: linear-gradient(120deg, #fe98004f 0%, #FF69001A 100%);
+}
+
 
 .text-gradient {
   background: linear-gradient(
@@ -100,6 +116,10 @@ img {
 
 .cream-gradient {
   background: linear-gradient(120deg, #fefce8 0%, #fff7ed 100%);
+}
+
+.cream-gradient2 {
+  background: linear-gradient(120deg, #fff7ed 0%, #fffbeb 100%);
 }
 
 .purple-gradient {
