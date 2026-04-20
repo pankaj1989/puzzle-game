@@ -9,6 +9,7 @@ const { generalLimiter } = require('./middleware/rateLimit');
 const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const profileRoutes = require('./routes/profile');
+const sessionRoutes = require('./routes/sessions');
 
 function createApp() {
   const app = express();
@@ -31,6 +32,7 @@ function createApp() {
 
   app.get('/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/categories', categoryRoutes);
+  app.use('/sessions', sessionRoutes);
   app.use('/auth', authRoutes);
   app.use('/profile', profileRoutes);
 
