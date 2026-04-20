@@ -1,4 +1,6 @@
-require('dotenv').config({ quiet: true });
+if (process.env.NODE_ENV !== 'test') {
+  require('dotenv').config({ quiet: true });
+}
 const { z } = require('zod');
 
 const schema = z.object({
