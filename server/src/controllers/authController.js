@@ -6,6 +6,7 @@ const emailService = require('../services/emailService');
 const { hashPassword, verifyPassword, DUMMY_HASH } = require('../services/passwordService');
 const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
 const googleAuthService = require('../services/googleAuthService');
+const { promoteIfAdminEmail } = require('../services/adminPromoter');
 const { HttpError } = require('../middleware/errorHandler');
 
 function hashSha(token) {
@@ -22,6 +23,7 @@ async function signup(req, res) {
   if (existing) throw new HttpError(409, 'Email already registered', 'EMAIL_TAKEN');
   const passwordHash = await hashPassword(password);
   const user = await User.create({ email, passwordHash, displayName });
+  await promoteIfAdminEmail(user);
   const accessToken = signAccessToken(user);
   const { token: refreshToken } = await issueRefreshToken(user);
   res.status(201).json({ accessToken, refreshToken, user });
@@ -37,6 +39,7 @@ async function login(req, res) {
   }
   user.lastLoginAt = new Date();
   await user.save();
+  await promoteIfAdminEmail(user);
   const accessToken = signAccessToken(user);
   const { token: refreshToken } = await issueRefreshToken(user);
   res.json({ accessToken, refreshToken, user });
@@ -92,6 +95,7 @@ async function magicVerify(req, res) {
     user.emailVerifiedAt = new Date();
     await user.save();
   }
+  await promoteIfAdminEmail(user);
   const accessToken = signAccessToken(user);
   const { token: refreshToken } = await issueRefreshToken(user);
   res.json({ accessToken, refreshToken, user });
@@ -119,6 +123,7 @@ async function google(req, res) {
     if (!user.displayName && profile.displayName) user.displayName = profile.displayName;
     await user.save();
   }
+  await promoteIfAdminEmail(user);
   const accessToken = signAccessToken(user);
   const { token: refreshToken } = await issueRefreshToken(user);
   res.json({ accessToken, refreshToken, user });
