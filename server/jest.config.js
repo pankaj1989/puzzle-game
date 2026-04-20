@@ -7,4 +7,5 @@ module.exports = {
   testTimeout: 30000,
   clearMocks: true,
   verbose: true,
+  maxWorkers: 1,
 };
