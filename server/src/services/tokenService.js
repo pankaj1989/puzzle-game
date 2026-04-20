@@ -44,7 +44,8 @@ async function rotateRefreshToken(oldToken) {
   const User = require('../models/User');
   const user = await User.findById(existing.userId);
   if (!user) throw new Error('invalid refresh token');
-  return issueRefreshToken(user);
+  const next = await issueRefreshToken(user);
+  return { ...next, user };
 }
 
 async function revokeRefreshToken(token) {

@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const { hashPassword, verifyPassword } = require('../services/passwordService');
-const { signAccessToken, issueRefreshToken } = require('../services/tokenService');
+const { signAccessToken, issueRefreshToken, rotateRefreshToken } = require('../services/tokenService');
 const { HttpError } = require('../middleware/errorHandler');
 
 async function signup(req, res) {
@@ -27,4 +27,15 @@ async function login(req, res) {
   res.json({ accessToken, refreshToken, user });
 }
 
-module.exports = { signup, login };
+async function refresh(req, res) {
+  const { refreshToken } = req.body;
+  try {
+    const { token: newRefresh, user } = await rotateRefreshToken(refreshToken);
+    const accessToken = signAccessToken(user);
+    res.json({ accessToken, refreshToken: newRefresh });
+  } catch {
+    throw new HttpError(401, 'Invalid refresh token', 'INVALID_REFRESH');
+  }
+}
+
+module.exports = { signup, login, refresh };
