@@ -1,12 +1,18 @@
 const sgMail = require('@sendgrid/mail');
 const env = require('../config/env');
 
-if (env.NODE_ENV !== 'test') {
+function isRealKey(key) {
+  return typeof key === 'string' && key.startsWith('SG.') && !key.includes('placeholder') && key.length > 20;
+}
+
+const USE_REAL_SENDGRID = env.NODE_ENV === 'production' || (env.NODE_ENV === 'development' && isRealKey(env.SENDGRID_API_KEY));
+
+if (USE_REAL_SENDGRID) {
   sgMail.setApiKey(env.SENDGRID_API_KEY);
 }
 
 async function sendEmail({ to, subject, html, text }) {
-  if (env.NODE_ENV === 'test') {
+  if (!USE_REAL_SENDGRID) {
     return { mocked: true };
   }
   return sgMail.send({
