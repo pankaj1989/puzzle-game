@@ -8,5 +8,6 @@ const authController = require('../controllers/authController');
 router.post('/signup', authLimiter, validate(signupSchema), asyncHandler(authController.signup));
 router.post('/login', authLimiter, validate(loginSchema), asyncHandler(authController.login));
 router.post('/refresh', validate(refreshSchema), asyncHandler(authController.refresh));
+router.post('/logout', validate(refreshSchema), asyncHandler(authController.logout));
 
 module.exports = router;

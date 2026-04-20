@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const { hashPassword, verifyPassword } = require('../services/passwordService');
-const { signAccessToken, issueRefreshToken, rotateRefreshToken } = require('../services/tokenService');
+const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
 const { HttpError } = require('../middleware/errorHandler');
 
 async function signup(req, res) {
@@ -38,4 +38,10 @@ async function refresh(req, res) {
   }
 }
 
-module.exports = { signup, login, refresh };
+async function logout(req, res) {
+  const { refreshToken } = req.body;
+  if (refreshToken) await revokeRefreshToken(refreshToken);
+  res.status(204).end();
+}
+
+module.exports = { signup, login, refresh, logout };
