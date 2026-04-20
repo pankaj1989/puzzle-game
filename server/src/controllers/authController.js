@@ -1,7 +1,15 @@
+const crypto = require('crypto');
 const User = require('../models/User');
+const MagicLinkToken = require('../models/MagicLinkToken');
+const env = require('../config/env');
+const emailService = require('../services/emailService');
 const { hashPassword, verifyPassword } = require('../services/passwordService');
 const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
 const { HttpError } = require('../middleware/errorHandler');
+
+function hashSha(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 async function signup(req, res) {
   const { email, password, displayName } = req.body;
@@ -44,4 +52,34 @@ async function logout(req, res) {
   res.status(204).end();
 }
 
-module.exports = { signup, login, refresh, logout };
+async function magicRequest(req, res) {
+  const { email } = req.body;
+  const token = crypto.randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + env.MAGIC_LINK_TTL_MINUTES * 60 * 1000);
+  await MagicLinkToken.create({ email, tokenHash: hashSha(token), expiresAt });
+  const link = `${env.MAGIC_LINK_REDIRECT_URL}?token=${token}`;
+  await emailService.sendMagicLink(email, link);
+  res.status(202).json({ ok: true });
+}
+
+async function magicVerify(req, res) {
+  const { token } = req.body;
+  const record = await MagicLinkToken.findOne({ tokenHash: hashSha(token) });
+  if (!record || record.consumedAt || record.expiresAt < new Date()) {
+    throw new HttpError(401, 'Invalid or expired token', 'INVALID_MAGIC_TOKEN');
+  }
+  record.consumedAt = new Date();
+  await record.save();
+  let user = await User.findOne({ email: record.email });
+  if (!user) {
+    user = await User.create({ email: record.email, emailVerifiedAt: new Date() });
+  } else if (!user.emailVerifiedAt) {
+    user.emailVerifiedAt = new Date();
+    await user.save();
+  }
+  const accessToken = signAccessToken(user);
+  const { token: refreshToken } = await issueRefreshToken(user);
+  res.json({ accessToken, refreshToken, user });
+}
+
+module.exports = { signup, login, refresh, logout, magicRequest, magicVerify };
