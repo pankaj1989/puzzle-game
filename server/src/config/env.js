@@ -16,6 +16,12 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   MAGIC_LINK_TTL_MINUTES: z.coerce.number().int().positive().default(15),
   MAGIC_LINK_REDIRECT_URL: z.url(),
+  TRUST_PROXY: z.union([
+    z.literal('true').transform(() => true),
+    z.literal('false').transform(() => false),
+    z.coerce.number().int().nonnegative(),
+  ]).default(false),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
 const parsed = schema.safeParse(process.env);

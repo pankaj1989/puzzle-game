@@ -12,3 +12,5 @@ process.env.SENDGRID_FROM_NAME = 'Test';
 process.env.GOOGLE_CLIENT_ID = 'test.apps.googleusercontent.com';
 process.env.MAGIC_LINK_TTL_MINUTES = '15';
 process.env.MAGIC_LINK_REDIRECT_URL = 'http://localhost:5173/auth/magic';
+process.env.TRUST_PROXY = 'false';
+process.env.LOG_LEVEL = 'silent';
