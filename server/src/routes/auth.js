@@ -8,8 +8,8 @@ const authRequired = require('../middleware/authRequired');
 
 router.post('/signup', authLimiter, validate(signupSchema), asyncHandler(authController.signup));
 router.post('/login', authLimiter, validate(loginSchema), asyncHandler(authController.login));
-router.post('/refresh', validate(refreshSchema), asyncHandler(authController.refresh));
-router.post('/logout', validate(refreshSchema), asyncHandler(authController.logout));
+router.post('/refresh', authLimiter, validate(refreshSchema), asyncHandler(authController.refresh));
+router.post('/logout', authLimiter, validate(refreshSchema), asyncHandler(authController.logout));
 router.post('/magic/request', magicLinkLimiter, validate(magicLinkRequestSchema), asyncHandler(authController.magicRequest));
 router.post('/magic/verify', validate(magicLinkVerifySchema), asyncHandler(authController.magicVerify));
 router.post('/google', validate(googleSchema), asyncHandler(authController.google));

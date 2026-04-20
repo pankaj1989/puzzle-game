@@ -12,7 +12,7 @@ function signAccessToken(user) {
 }
 
 function verifyAccessToken(token) {
-  return jwt.verify(token, env.JWT_ACCESS_SECRET);
+  return jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
 }
 
 function hashToken(token) {
@@ -35,12 +35,13 @@ async function issueRefreshToken(user) {
 }
 
 async function rotateRefreshToken(oldToken) {
-  const existing = await RefreshToken.findOne({ tokenHash: hashToken(oldToken) });
+  const now = new Date();
+  const existing = await RefreshToken.findOneAndUpdate(
+    { tokenHash: hashToken(oldToken), revokedAt: null, expiresAt: { $gt: now } },
+    { $set: { revokedAt: now } },
+    { returnDocument: 'before' }
+  );
   if (!existing) throw new Error('invalid refresh token');
-  if (existing.revokedAt) throw new Error('invalid refresh token');
-  if (existing.expiresAt < new Date()) throw new Error('invalid refresh token');
-  existing.revokedAt = new Date();
-  await existing.save();
   const User = require('../models/User');
   const user = await User.findById(existing.userId);
   if (!user) throw new Error('invalid refresh token');

@@ -36,4 +36,16 @@ describe('tokenService', () => {
     await revokeRefreshToken(token);
     await expect(rotateRefreshToken(token)).rejects.toThrow();
   });
+
+  it('rejects HS512-signed access token (algorithm confusion defense)', () => {
+    const jwt = require('jsonwebtoken');
+    const env = require('../../src/config/env');
+    const badToken = jwt.sign(
+      { sub: 'x', role: 'user', plan: 'free' },
+      env.JWT_ACCESS_SECRET,
+      { algorithm: 'HS512', expiresIn: '15m' }
+    );
+    const { verifyAccessToken } = require('../../src/services/tokenService');
+    expect(() => verifyAccessToken(badToken)).toThrow();
+  });
 });
