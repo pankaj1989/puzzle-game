@@ -1,0 +1,16 @@
+{
+  "name": "puzzle-game-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend API for Bumper Stumpers",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --runInBand"
+  }
+}
