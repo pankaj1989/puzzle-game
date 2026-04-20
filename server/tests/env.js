@@ -1,0 +1,14 @@
+process.env.NODE_ENV = 'test';
+process.env.PORT = '4000';
+process.env.CLIENT_ORIGIN = 'http://localhost:5173';
+process.env.MONGODB_URI = 'mongodb://placeholder/test';
+process.env.JWT_ACCESS_SECRET = 'a'.repeat(40);
+process.env.JWT_REFRESH_SECRET = 'b'.repeat(40);
+process.env.JWT_ACCESS_TTL = '15m';
+process.env.JWT_REFRESH_TTL = '7d';
+process.env.SENDGRID_API_KEY = 'SG.test';
+process.env.SENDGRID_FROM_EMAIL = 'noreply@test.com';
+process.env.SENDGRID_FROM_NAME = 'Test';
+process.env.GOOGLE_CLIENT_ID = 'test.apps.googleusercontent.com';
+process.env.MAGIC_LINK_TTL_MINUTES = '15';
+process.env.MAGIC_LINK_REDIRECT_URL = 'http://localhost:5173/auth/magic';
