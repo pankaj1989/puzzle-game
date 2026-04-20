@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { hashPassword } = require('../services/passwordService');
+const { hashPassword, verifyPassword } = require('../services/passwordService');
 const { signAccessToken, issueRefreshToken } = require('../services/tokenService');
 const { HttpError } = require('../middleware/errorHandler');
 
@@ -14,4 +14,17 @@ async function signup(req, res) {
   res.status(201).json({ accessToken, refreshToken, user });
 }
 
-module.exports = { signup };
+async function login(req, res) {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user || !user.passwordHash) throw new HttpError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+  const ok = await verifyPassword(password, user.passwordHash);
+  if (!ok) throw new HttpError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+  user.lastLoginAt = new Date();
+  await user.save();
+  const accessToken = signAccessToken(user);
+  const { token: refreshToken } = await issueRefreshToken(user);
+  res.json({ accessToken, refreshToken, user });
+}
+
+module.exports = { signup, login };
