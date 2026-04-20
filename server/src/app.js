@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const pinoHttp = require('pino-http');
 const env = require('./config/env');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimit');
@@ -10,6 +11,17 @@ const profileRoutes = require('./routes/profile');
 
 function createApp() {
   const app = express();
+
+  if (env.TRUST_PROXY !== false) {
+    app.set('trust proxy', env.TRUST_PROXY);
+  }
+
+  app.use(pinoHttp({
+    level: env.LOG_LEVEL,
+    autoLogging: env.NODE_ENV !== 'test',
+    redact: ['req.headers.authorization', 'req.headers.cookie'],
+  }));
+
   app.use(helmet());
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
