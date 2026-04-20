@@ -21,4 +21,7 @@ router.post(
 
 router.post('/:id/hint', authRequired(), asyncHandler(controller.requestHint));
 
+router.get('/me', authRequired(), asyncHandler(controller.listMySessions));
+router.get('/:id', authRequired(), asyncHandler(controller.getSession));
+
 module.exports = router;

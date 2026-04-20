@@ -2,7 +2,7 @@ const GameSession = require('../models/GameSession');
 const Puzzle = require('../models/Puzzle');
 const { pickRandomPuzzle } = require('../services/puzzleService');
 const { calculateScore, normalizeAnswer } = require('../services/scoringService');
-const { mongoIdSchema } = require('../validators/sessionValidators');
+const { mongoIdSchema, listSessionsQuery } = require('../validators/sessionValidators');
 const { HttpError } = require('../middleware/errorHandler');
 
 function serializePuzzle(puzzle) {
@@ -131,10 +131,35 @@ async function requestHint(req, res) {
   res.json({ hintsUsed: session.hintsUsed, nextHint: { index, letter } });
 }
 
+async function listMySessions(req, res) {
+  const parsed = listSessionsQuery.safeParse(req.query);
+  if (!parsed.success) throw new HttpError(400, 'Invalid query', 'VALIDATION_ERROR');
+  const { page, limit } = parsed.data;
+  const filter = { userId: req.user._id };
+  const [sessions, total] = await Promise.all([
+    GameSession.find(filter).sort({ startedAt: -1 }).skip((page - 1) * limit).limit(limit),
+    GameSession.countDocuments(filter),
+  ]);
+  res.json({ total, sessions: sessions.map(serializeSession), page, limit });
+}
+
+async function getSession(req, res) {
+  const idCheck = mongoIdSchema.safeParse(req.params.id);
+  if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
+  const session = await GameSession.findById(req.params.id);
+  if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
+  if (session.userId.toString() !== req.user._id.toString()) {
+    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
+  }
+  res.json({ session: serializeSession(session) });
+}
+
 module.exports = {
   startSession,
   submitGuess,
   requestHint,
+  listMySessions,
+  getSession,
   serializeSession,
   serializePuzzle,
 };
