@@ -110,4 +110,8 @@ async function google(req, res) {
   res.json({ accessToken, refreshToken, user });
 }
 
-module.exports = { signup, login, refresh, logout, magicRequest, magicVerify, google };
+async function me(req, res) {
+  res.json({ user: req.user });
+}
+
+module.exports = { signup, login, refresh, logout, magicRequest, magicVerify, google, me };
