@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const profileRoutes = require('./routes/profile');
 const sessionRoutes = require('./routes/sessions');
+const pricingRoutes = require('./routes/pricing');
 
 function createApp() {
   const app = express();
@@ -35,6 +36,7 @@ function createApp() {
   app.use('/sessions', sessionRoutes);
   app.use('/auth', authRoutes);
   app.use('/profile', profileRoutes);
+  app.use('/', pricingRoutes);
 
   app.use((req, res, next) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
