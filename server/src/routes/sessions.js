@@ -19,4 +19,6 @@ router.post(
   asyncHandler(controller.submitGuess)
 );
 
+router.post('/:id/hint', authRequired(), asyncHandler(controller.requestHint));
+
 module.exports = router;

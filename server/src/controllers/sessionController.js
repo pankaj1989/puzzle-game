@@ -105,4 +105,36 @@ async function submitGuess(req, res) {
   });
 }
 
-module.exports = { startSession, submitGuess, serializeSession, serializePuzzle };
+async function requestHint(req, res) {
+  const idCheck = mongoIdSchema.safeParse(req.params.id);
+  if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
+  const session = await GameSession.findById(req.params.id);
+  if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
+  if (session.userId.toString() !== req.user._id.toString()) {
+    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
+  }
+  if (session.completedAt) throw new HttpError(409, 'Session already completed', 'SESSION_COMPLETED');
+
+  const puzzle = await Puzzle.findById(session.puzzleId);
+  if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
+
+  if (session.hintsUsed >= puzzle.revealSequence.length) {
+    throw new HttpError(409, 'No more hints available', 'NO_MORE_HINTS');
+  }
+
+  const index = puzzle.revealSequence[session.hintsUsed];
+  const letter = puzzle.answer.charAt(index).toUpperCase();
+
+  session.hintsUsed += 1;
+  await session.save();
+
+  res.json({ hintsUsed: session.hintsUsed, nextHint: { index, letter } });
+}
+
+module.exports = {
+  startSession,
+  submitGuess,
+  requestHint,
+  serializeSession,
+  serializePuzzle,
+};
