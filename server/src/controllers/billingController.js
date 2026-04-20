@@ -103,4 +103,19 @@ async function webhook(req, res) {
   res.json({ received: true });
 }
 
-module.exports = { checkout, webhook };
+async function getSubscription(req, res) {
+  const subscription = await Subscription.findOne({ userId: req.user._id });
+  res.json({ subscription });
+}
+
+async function portal(req, res) {
+  const sub = await Subscription.findOne({ userId: req.user._id });
+  if (!sub?.stripeCustomerId) throw new HttpError(409, 'No Stripe customer', 'NO_CUSTOMER');
+  const { url } = await stripeService.createPortalSession({
+    customer: sub.stripeCustomerId,
+    returnUrl: env.STRIPE_CANCEL_URL,
+  });
+  res.json({ url });
+}
+
+module.exports = { checkout, webhook, getSubscription, portal };

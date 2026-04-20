@@ -5,5 +5,7 @@ const controller = require('../controllers/billingController');
 
 router.post('/checkout', authRequired(), asyncHandler(controller.checkout));
 router.post('/webhook', asyncHandler(controller.webhook));
+router.get('/subscription', authRequired(), asyncHandler(controller.getSubscription));
+router.post('/portal', authRequired(), asyncHandler(controller.portal));
 
 module.exports = router;
