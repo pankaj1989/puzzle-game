@@ -24,6 +24,13 @@ const schema = z.object({
     z.coerce.number().int().nonnegative(),
   ]).default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  STRIPE_SECRET_KEY: z.string().min(1),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  STRIPE_SUCCESS_URL: z.url(),
+  STRIPE_CANCEL_URL: z.url(),
+  ADMIN_EMAILS: z.string().default('').transform(s =>
+    s.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+  ),
 });
 
 const parsed = schema.safeParse(process.env);
