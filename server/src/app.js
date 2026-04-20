@@ -11,6 +11,7 @@ const categoryRoutes = require('./routes/categories');
 const profileRoutes = require('./routes/profile');
 const sessionRoutes = require('./routes/sessions');
 const pricingRoutes = require('./routes/pricing');
+const billingRoutes = require('./routes/billing');
 
 function createApp() {
   const app = express();
@@ -27,6 +28,7 @@ function createApp() {
 
   app.use(helmet());
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
+  app.use('/billing/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
   app.use(generalLimiter);
@@ -37,6 +39,7 @@ function createApp() {
   app.use('/auth', authRoutes);
   app.use('/profile', profileRoutes);
   app.use('/', pricingRoutes);
+  app.use('/billing', billingRoutes);
 
   app.use((req, res, next) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
