@@ -5,6 +5,7 @@ const env = require('../config/env');
 const emailService = require('../services/emailService');
 const { hashPassword, verifyPassword } = require('../services/passwordService');
 const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
+const googleAuthService = require('../services/googleAuthService');
 const { HttpError } = require('../middleware/errorHandler');
 
 function hashSha(token) {
@@ -82,4 +83,31 @@ async function magicVerify(req, res) {
   res.json({ accessToken, refreshToken, user });
 }
 
-module.exports = { signup, login, refresh, logout, magicRequest, magicVerify };
+async function google(req, res) {
+  const { idToken } = req.body;
+  let profile;
+  try {
+    profile = await googleAuthService.verifyIdToken(idToken);
+  } catch {
+    throw new HttpError(401, 'Invalid Google token', 'INVALID_GOOGLE_TOKEN');
+  }
+  let user = await User.findOne({ $or: [{ googleId: profile.googleId }, { email: profile.email }] });
+  if (!user) {
+    user = await User.create({
+      email: profile.email,
+      googleId: profile.googleId,
+      displayName: profile.displayName,
+      emailVerifiedAt: profile.emailVerified ? new Date() : null,
+    });
+  } else {
+    if (!user.googleId) user.googleId = profile.googleId;
+    if (!user.emailVerifiedAt && profile.emailVerified) user.emailVerifiedAt = new Date();
+    if (!user.displayName && profile.displayName) user.displayName = profile.displayName;
+    await user.save();
+  }
+  const accessToken = signAccessToken(user);
+  const { token: refreshToken } = await issueRefreshToken(user);
+  res.json({ accessToken, refreshToken, user });
+}
+
+module.exports = { signup, login, refresh, logout, magicRequest, magicVerify, google };
