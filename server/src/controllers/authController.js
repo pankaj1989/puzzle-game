@@ -61,11 +61,15 @@ async function logout(req, res) {
 
 async function magicRequest(req, res) {
   const { email } = req.body;
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = new Date(Date.now() + env.MAGIC_LINK_TTL_MINUTES * 60 * 1000);
-  await MagicLinkToken.create({ email, tokenHash: hashSha(token), expiresAt });
-  const link = `${env.MAGIC_LINK_REDIRECT_URL}?token=${token}`;
-  await emailService.sendMagicLink(email, link);
+  const user = await User.findOne({ email });
+  if (user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + env.MAGIC_LINK_TTL_MINUTES * 60 * 1000);
+    await MagicLinkToken.create({ email, tokenHash: hashSha(token), expiresAt });
+    const link = `${env.MAGIC_LINK_REDIRECT_URL}?token=${token}`;
+    await emailService.sendMagicLink(email, link);
+  }
+  // Always 202 regardless — do not reveal whether the email is registered.
   res.status(202).json({ ok: true });
 }
 
