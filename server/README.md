@@ -12,6 +12,32 @@ Node.js + Express + MongoDB API for the puzzle game.
 
 Server runs on `http://localhost:4000`.
 
+## Full-stack local dev
+
+Run all three pieces in separate terminals:
+
+```bash
+# Terminal 1 — MongoDB (via brew)
+brew services start mongodb-community
+
+# Terminal 2 — Backend
+cd server && npm run dev       # http://localhost:4000
+
+# Terminal 3 — Frontend
+npm run dev                    # http://localhost:5173
+```
+
+Seed data once (idempotent upsert):
+```bash
+cd server && npm run seed
+```
+
+Env files:
+- `server/.env` — backend secrets (copy from `server/.env.example`)
+- `.env.local` — frontend (copy from `.env.local.example`)
+
+In development, `/auth/magic/request` returns `devMagicLinkUrl` in its response so you can test magic-link sign-in without SendGrid. The login page renders the dev link inline.
+
 ## Environment Variables
 
 See `.env.example` for the full list. Required:
