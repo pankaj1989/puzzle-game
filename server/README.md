@@ -8,6 +8,7 @@ Node.js + Express + MongoDB API for the puzzle game.
 2. Start a local MongoDB (Docker: `docker run -p 27017:27017 mongo:7`)
 3. `npm install`
 4. `npm run dev`
+5. `npm run seed` — load starter categories + puzzles into your local MongoDB
 
 Server runs on `http://localhost:4000`.
 
