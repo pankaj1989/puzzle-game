@@ -3,7 +3,7 @@ const User = require('../models/User');
 const MagicLinkToken = require('../models/MagicLinkToken');
 const env = require('../config/env');
 const emailService = require('../services/emailService');
-const { hashPassword, verifyPassword } = require('../services/passwordService');
+const { hashPassword, verifyPassword, DUMMY_HASH } = require('../services/passwordService');
 const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
 const googleAuthService = require('../services/googleAuthService');
 const { HttpError } = require('../middleware/errorHandler');
@@ -15,6 +15,10 @@ function hashSha(token) {
 async function signup(req, res) {
   const { email, password, displayName } = req.body;
   const existing = await User.findOne({ email });
+  // Tradeoff: we return 409 on duplicate email so the client UI can surface
+  // "you already have an account — log in instead". This allows email enumeration
+  // via signup, which we accept for game-app UX. Login and magic-link endpoints
+  // already do not reveal account existence.
   if (existing) throw new HttpError(409, 'Email already registered', 'EMAIL_TAKEN');
   const passwordHash = await hashPassword(password);
   const user = await User.create({ email, passwordHash, displayName });
@@ -26,9 +30,11 @@ async function signup(req, res) {
 async function login(req, res) {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (!user || !user.passwordHash) throw new HttpError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) throw new HttpError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+  const hash = user?.passwordHash || DUMMY_HASH;
+  const ok = await verifyPassword(password, hash);
+  if (!user || !user.passwordHash || !ok) {
+    throw new HttpError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+  }
   user.lastLoginAt = new Date();
   await user.save();
   const accessToken = signAccessToken(user);

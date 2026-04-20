@@ -11,4 +11,12 @@ describe('passwordService', () => {
     const hash = await hashPassword('hunter2');
     expect(await verifyPassword('wrong', hash)).toBe(false);
   });
+
+  it('exports a DUMMY_HASH suitable for bcrypt.compare', async () => {
+    const { DUMMY_HASH, verifyPassword } = require('../../src/services/passwordService');
+    expect(typeof DUMMY_HASH).toBe('string');
+    expect(DUMMY_HASH.startsWith('$2')).toBe(true);
+    // Comparing against it should return false for any plausible input
+    expect(await verifyPassword('anything', DUMMY_HASH)).toBe(false);
+  });
 });
