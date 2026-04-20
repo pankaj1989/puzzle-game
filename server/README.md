@@ -22,7 +22,7 @@ See `.env.example` for the full list. Required:
 - `GOOGLE_CLIENT_ID` — Google OAuth Web client ID (from https://console.cloud.google.com)
 - `MAGIC_LINK_REDIRECT_URL` — frontend URL where the magic-link token is verified (e.g. `http://localhost:5173/auth/magic`)
 
-## Auth Endpoints
+## API Endpoints
 
 | Method | Path | Auth | Body | Description |
 |---|---|---|---|---|
@@ -36,6 +36,12 @@ See `.env.example` for the full list. Required:
 | GET | /auth/me | Bearer | — | Current user |
 | GET | /profile | Bearer | — | Get profile |
 | PATCH | /profile | Bearer | `{ displayName? }` | Update profile |
+| GET | /categories | — | — | List all categories |
+| POST | /sessions/start | Bearer | `{ categorySlug? }` | Start a new session; free users may not pass categorySlug |
+| POST | /sessions/:id/hint | Bearer | — | Request next hint (penalty applied at scoring) |
+| POST | /sessions/:id/guess | Bearer | `{ guess }` | Submit answer; server scores and finalizes |
+| GET | /sessions/me | Bearer | — | Paginated list of your sessions |
+| GET | /sessions/:id | Bearer | — | Single session detail (must be yours) |
 
 All protected endpoints require `Authorization: Bearer <accessToken>`.
 
@@ -54,6 +60,26 @@ All protected endpoints require `Authorization: Bearer <accessToken>`.
 ```json
 { "error": { "code": "UNAUTHORIZED", "message": "Missing token" } }
 ```
+
+## Scoring
+
+Score is calculated server-side when a session is completed with a correct guess:
+
+```
+score = basePoints × timeBonus × difficultyMult × hintPenalty × wrongGuessPenalty
+```
+
+- `timeBonus` = max(0.1, 1 − elapsed / timeLimit)
+- `difficultyMult` = easy 1.0, medium 1.5, hard 2.0
+- `hintPenalty` = max(0.1, 1 − hintsUsed × 0.15)
+- `wrongGuessPenalty` = max(0.3, 1 − wrongGuesses × 0.1)
+
+Rounded to integer, never negative.
+
+## Plan Gating
+
+- **Free plan:** `POST /sessions/start` with no body → random non-premium puzzle. Passing `categorySlug` returns 403 `PLAN_REQUIRED`.
+- **Premium plan:** `POST /sessions/start` with or without `categorySlug` → any puzzle (premium + non-premium).
 
 ## Testing
 
