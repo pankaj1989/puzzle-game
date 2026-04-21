@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema({
   planExpiresAt: { type: Date, default: null },
   emailVerifiedAt: { type: Date, default: null },
   lastLoginAt: { type: Date, default: null },
+  currentStreak: { type: Number, default: 0, min: 0 },
+  longestStreak: { type: Number, default: 0, min: 0 },
+  lastPlayedDay: { type: Date, default: null },
+  totalScore: { type: Number, default: 0, min: 0, index: true },
 }, { timestamps: true });
 
 userSchema.methods.toJSON = function () {
