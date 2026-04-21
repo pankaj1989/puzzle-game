@@ -6,6 +6,7 @@ import { SignupPage } from './pages/SignupPage';
 import { LoginPage } from './pages/LoginPage';
 import { MagicLinkPage } from './pages/MagicLinkPage';
 import { BillingSuccessPage } from './pages/BillingSuccessPage';
+import { LeaderboardsPage } from './pages/LeaderboardsPage';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminRoute from './admin/AdminRoute';
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/magic" element={<MagicLinkPage />} />
           <Route path="/billing/success" element={<BillingSuccessPage />} />
+          <Route path="/leaderboards" element={<LeaderboardsPage />} />
           <Route
             path="/game-start"
             element={
