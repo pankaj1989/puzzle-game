@@ -14,6 +14,7 @@ const pricingRoutes = require('./routes/pricing');
 const billingRoutes = require('./routes/billing');
 const adminCategoryRoutes = require('./routes/adminCategories');
 const adminPuzzleRoutes = require('./routes/adminPuzzles');
+const adminUserRoutes = require('./routes/adminUsers');
 
 function createApp() {
   const app = express();
@@ -44,6 +45,7 @@ function createApp() {
   app.use('/billing', billingRoutes);
   app.use('/admin/categories', adminCategoryRoutes);
   app.use('/admin/puzzles', adminPuzzleRoutes);
+  app.use('/admin/users', adminUserRoutes);
 
   app.use((req, res, next) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
