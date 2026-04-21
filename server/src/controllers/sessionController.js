@@ -2,6 +2,7 @@ const GameSession = require('../models/GameSession');
 const Puzzle = require('../models/Puzzle');
 const { pickRandomPuzzle } = require('../services/puzzleService');
 const { calculateScore, normalizeAnswer } = require('../services/scoringService');
+const { computeStreakUpdate } = require('../services/streakService');
 const { mongoIdSchema, listSessionsQuery } = require('../validators/sessionValidators');
 const { HttpError } = require('../middleware/errorHandler');
 
@@ -96,6 +97,18 @@ async function submitGuess(req, res) {
   session.completedAt = new Date();
   session.finalGuess = normalizedGuess;
   await session.save();
+
+  const streakUpdate = computeStreakUpdate({
+    lastPlayedDay: req.user.lastPlayedDay,
+    currentStreak: req.user.currentStreak,
+    longestStreak: req.user.longestStreak,
+    now: new Date(),
+  });
+  req.user.currentStreak = streakUpdate.currentStreak;
+  req.user.longestStreak = streakUpdate.longestStreak;
+  req.user.lastPlayedDay = streakUpdate.lastPlayedDay;
+  req.user.totalScore = (req.user.totalScore || 0) + score;
+  await req.user.save();
 
   res.json({
     solved: true,

@@ -92,3 +92,27 @@ describe('POST /sessions/:id/guess', () => {
     expect(res.body.score).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('streak + totalScore updates', () => {
+  it('first solve increments currentStreak to 1 and adds score to totalScore', async () => {
+    const { session, user } = await seed();
+    await request(app()).post(`/sessions/${session._id}/guess`)
+      .set(authHeader(user)).send({ guess: 'love tomorrow' });
+    const User = require('../../src/models/User');
+    const fresh = await User.findById(user._id);
+    expect(fresh.currentStreak).toBe(1);
+    expect(fresh.longestStreak).toBe(1);
+    expect(fresh.totalScore).toBeGreaterThan(0);
+    expect(fresh.lastPlayedDay).not.toBeNull();
+  });
+
+  it('wrong guess does not touch streak', async () => {
+    const { session, user } = await seed();
+    await request(app()).post(`/sessions/${session._id}/guess`)
+      .set(authHeader(user)).send({ guess: 'nope' });
+    const User = require('../../src/models/User');
+    const fresh = await User.findById(user._id);
+    expect(fresh.currentStreak).toBe(0);
+    expect(fresh.totalScore).toBe(0);
+  });
+});
