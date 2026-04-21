@@ -71,6 +71,11 @@ See `.env.example` for the full list. Required:
 | POST | /sessions/:id/guess | Bearer | `{ guess }` | Submit answer; server scores and finalizes |
 | GET | /sessions/me | Bearer | — | Paginated list of your sessions |
 | GET | /sessions/:id | Bearer | — | Single session detail (must be yours) |
+| GET | /sessions/:id/share | Bearer | — | Shareable result text |
+| GET | /leaderboards/day | — | — | Daily leaderboard |
+| GET | /leaderboards/week | — | — | Weekly leaderboard |
+| GET | /leaderboards/all | — | — | All-time leaderboard |
+| GET | /leaderboards/me | Bearer | `?window=day\|week\|all` | Your rank + score |
 | GET | /pricing | — | — | Current active price (or null) |
 | POST | /admin/pricing | Bearer + admin | `{ stripePriceId, amountCents, currency, interval }` | Upsert pricing (deactivates prior) |
 | POST | /billing/checkout | Bearer | — | Stripe Checkout session URL |
@@ -152,6 +157,21 @@ Any user whose email is in `ADMIN_EMAILS` is auto-promoted to `admin` role on si
 - **Pricing** — upsert the active Stripe price (replaces the curl workflow)
 
 Non-admin users hitting `/admin` are redirected back to `/game-start`.
+
+## Leaderboards + Streaks
+
+Users accumulate a daily `currentStreak` (consecutive UTC days with at least one solved puzzle). Missing a day resets the streak to 1 on next solve. `longestStreak` never decreases. `totalScore` is denormalized on the User document and incremented on every solved session.
+
+Public endpoints (no auth):
+- `GET /leaderboards/day` — sum of session scores completed today (UTC)
+- `GET /leaderboards/week` — sum from the last 7 days
+- `GET /leaderboards/all` — ranked by `User.totalScore`
+
+Authed endpoints:
+- `GET /leaderboards/me?window=day|week|all` — your rank and score (`rank` is `null` if score is 0)
+
+Sharing:
+- `GET /sessions/:id/share` — returns a short emoji-grid text block; the frontend lets the user copy it to clipboard.
 
 ## Plan Gating
 
