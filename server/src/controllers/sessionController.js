@@ -3,6 +3,7 @@ const Puzzle = require('../models/Puzzle');
 const { pickRandomPuzzle } = require('../services/puzzleService');
 const { calculateScore, normalizeAnswer } = require('../services/scoringService');
 const { computeStreakUpdate } = require('../services/streakService');
+const { buildShareText } = require('../services/shareService');
 const { mongoIdSchema, listSessionsQuery } = require('../validators/sessionValidators');
 const { HttpError } = require('../middleware/errorHandler');
 
@@ -167,12 +168,32 @@ async function getSession(req, res) {
   res.json({ session: serializeSession(session) });
 }
 
+async function getShare(req, res) {
+  const idCheck = mongoIdSchema.safeParse(req.params.id);
+  if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
+  const session = await GameSession.findById(req.params.id);
+  if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
+  if (session.userId.toString() !== req.user._id.toString()) {
+    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
+  }
+  const puzzle = await Puzzle.findById(session.puzzleId);
+  if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
+  const text = buildShareText({
+    plate: puzzle.plate,
+    score: session.score || 0,
+    hintsUsed: session.hintsUsed,
+    wrongGuesses: session.wrongGuesses,
+  });
+  res.json({ text });
+}
+
 module.exports = {
   startSession,
   submitGuess,
   requestHint,
   listMySessions,
   getSession,
+  getShare,
   serializeSession,
   serializePuzzle,
 };
