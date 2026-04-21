@@ -8,6 +8,13 @@ import { MagicLinkPage } from './pages/MagicLinkPage';
 import { BillingSuccessPage } from './pages/BillingSuccessPage';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import AdminRoute from './admin/AdminRoute';
+import AdminLayout from './admin/AdminLayout';
+import { DashboardPage } from './pages/admin/DashboardPage';
+import { CategoriesPage } from './pages/admin/CategoriesPage';
+import { PuzzlesPage } from './pages/admin/PuzzlesPage';
+import { UsersPage } from './pages/admin/UsersPage';
+import { PricingPage } from './pages/admin/PricingPage';
 
 export default function App() {
   return (
@@ -35,6 +42,20 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<DashboardPage />} />
+            <Route path="puzzles" element={<PuzzlesPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="pricing" element={<PricingPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
