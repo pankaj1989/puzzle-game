@@ -16,6 +16,7 @@ const adminCategoryRoutes = require('./routes/adminCategories');
 const adminPuzzleRoutes = require('./routes/adminPuzzles');
 const adminUserRoutes = require('./routes/adminUsers');
 const adminStatsRoutes = require('./routes/adminStats');
+const leaderboardRoutes = require('./routes/leaderboards');
 
 function createApp() {
   const app = express();
@@ -48,6 +49,7 @@ function createApp() {
   app.use('/admin/puzzles', adminPuzzleRoutes);
   app.use('/admin/users', adminUserRoutes);
   app.use('/admin/stats', adminStatsRoutes);
+  app.use('/leaderboards', leaderboardRoutes);
 
   app.use((req, res, next) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
