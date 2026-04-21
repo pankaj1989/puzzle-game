@@ -12,6 +12,7 @@ const profileRoutes = require('./routes/profile');
 const sessionRoutes = require('./routes/sessions');
 const pricingRoutes = require('./routes/pricing');
 const billingRoutes = require('./routes/billing');
+const adminCategoryRoutes = require('./routes/adminCategories');
 
 function createApp() {
   const app = express();
@@ -40,6 +41,7 @@ function createApp() {
   app.use('/profile', profileRoutes);
   app.use('/', pricingRoutes);
   app.use('/billing', billingRoutes);
+  app.use('/admin/categories', adminCategoryRoutes);
 
   app.use((req, res, next) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
