@@ -2,22 +2,29 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { PremiumAdModal } from '../components/common/PremiumAdModal';
 
 export function GameStart() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
+  const [upsellOpen, setUpsellOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const { categories } = await api.get('/categories');
+        const [cats, sub] = await Promise.all([
+          api.get('/categories'),
+          api.get('/billing/subscription').catch(() => ({ subscription: null })),
+        ]);
         if (!active) return;
-        setCategories(categories);
+        setCategories(cats.categories);
+        setSubscription(sub.subscription);
       } catch (err) {
         if (active) setError(err.message);
       } finally {
@@ -42,6 +49,15 @@ export function GameStart() {
     }
   }
 
+  async function openPortal() {
+    try {
+      const { url } = await api.post('/billing/portal', {});
+      window.location.href = url;
+    } catch (err) {
+      setError(err.message || 'Could not open billing portal');
+    }
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-navy">Loading…</div>;
   }
@@ -50,7 +66,7 @@ export function GameStart() {
 
   return (
     <div className="min-h-screen px-4 py-10 max-w-4xl mx-auto">
-      <header className="flex justify-between items-center mb-8">
+      <header className="flex justify-between items-center mb-8 flex-wrap gap-3">
         <h1 className="text-3xl font-serif text-navy">Choose your game</h1>
         <div className="text-sm text-text-muted">
           Signed in as <strong>{user?.email}</strong>{' '}
@@ -59,6 +75,26 @@ export function GameStart() {
           </button>
         </div>
       </header>
+
+      {subscription && (
+        <div className="mb-6 p-4 border border-card-gray2 rounded-xl bg-white/70 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm text-text-muted">Subscription</div>
+            <div className="text-navy">
+              <strong className="capitalize">{subscription.status}</strong>
+              {subscription.cancelAtPeriodEnd && ' (cancels at period end)'}
+              {' · renews '}
+              {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+            </div>
+          </div>
+          <button
+            onClick={openPortal}
+            className="py-2 px-4 rounded-lg border-2 border-navy text-navy font-semibold bg-white hover:bg-cream"
+          >
+            Manage subscription
+          </button>
+        </div>
+      )}
 
       <div className="mb-8 p-4 bg-cream/60 border border-card-yellow rounded-xl">
         <h2 className="text-xl font-serif text-navy mb-1">Quick play</h2>
@@ -82,17 +118,20 @@ export function GameStart() {
           return (
             <button
               key={cat._id || cat.id}
-              onClick={() => !locked && startSession(cat.slug)}
-              disabled={locked || starting}
+              onClick={() => {
+                if (locked) setUpsellOpen(true);
+                else startSession(cat.slug);
+              }}
+              disabled={starting}
               className={`p-5 rounded-xl border-2 text-left transition ${
                 locked
-                  ? 'border-card-gray2 bg-card-gray/40 text-text-muted2 cursor-not-allowed'
+                  ? 'border-card-gray2 bg-card-gray/40 text-text-muted2 hover:bg-card-gray/60'
                   : 'border-navy bg-white hover:shadow-lg'
               }`}
             >
               <div className="font-semibold text-navy">{cat.name}</div>
               <div className="text-xs mt-1">
-                {locked ? '🔒 Premium only' : premiumOnly ? '★ Premium' : 'Free'}
+                {locked ? '🔒 Premium only — tap to upgrade' : premiumOnly ? '★ Premium' : 'Free'}
               </div>
             </button>
           );
@@ -104,6 +143,8 @@ export function GameStart() {
           {error}
         </div>
       )}
+
+      <PremiumAdModal isOpen={upsellOpen} onClose={() => setUpsellOpen(false)} />
     </div>
   );
 }
