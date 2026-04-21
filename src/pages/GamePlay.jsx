@@ -251,6 +251,30 @@ function GameScreen({ initialSession, puzzle }) {
 }
 
 function ResultScreen({ result, puzzle, session, onPlayAgain }) {
+  const [shareText, setShareText] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [shareError, setShareError] = useState(null);
+
+  async function loadShare() {
+    setShareError(null);
+    try {
+      const { text } = await api.get(`/sessions/${session.id}/share`);
+      setShareText(text);
+    } catch (err) {
+      setShareError(err.message);
+    }
+  }
+
+  async function copyShare() {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setShareError('Copy failed — you can select the text manually');
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="max-w-lg w-full text-center">
@@ -274,6 +298,32 @@ function ResultScreen({ result, puzzle, session, onPlayAgain }) {
             Hints: {session.hintsUsed} · Wrong guesses: {session.wrongGuesses}
           </div>
         </div>
+
+        {shareText ? (
+          <div className="mb-6 bg-white rounded-xl border border-card-gray2 p-4">
+            <pre className="whitespace-pre-wrap text-left text-navy mb-3 font-mono text-sm">{shareText}</pre>
+            <button
+              onClick={copyShare}
+              className="py-2 px-4 rounded-lg border-2 border-navy text-navy font-semibold bg-white hover:bg-cream"
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={loadShare}
+            className="mb-6 py-2 px-4 rounded-lg border-2 border-navy text-navy font-semibold bg-white hover:bg-cream"
+          >
+            Share result
+          </button>
+        )}
+
+        {shareError && (
+          <div className="mb-6 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {shareError}
+          </div>
+        )}
+
         <button
           onClick={onPlayAgain}
           className="py-3 px-8 rounded-lg navy-gradient text-cream font-semibold border-2 border-brand-orange"
