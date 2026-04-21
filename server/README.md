@@ -47,6 +47,9 @@ See `.env.example` for the full list. Required:
 - `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL` / `SENDGRID_FROM_NAME` — for magic link emails
 - `GOOGLE_CLIENT_ID` — Google OAuth Web client ID (from https://console.cloud.google.com)
 - `MAGIC_LINK_REDIRECT_URL` — frontend URL where the magic-link token is verified (e.g. `http://localhost:5173/auth/magic`)
+- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` — from https://dashboard.stripe.com/test/apikeys and `stripe listen` output
+- `STRIPE_SUCCESS_URL` / `STRIPE_CANCEL_URL` — where Stripe redirects after Checkout
+- `ADMIN_EMAILS` — comma-separated; matching users are auto-promoted to admin on sign-in
 
 ## API Endpoints
 
@@ -68,6 +71,12 @@ See `.env.example` for the full list. Required:
 | POST | /sessions/:id/guess | Bearer | `{ guess }` | Submit answer; server scores and finalizes |
 | GET | /sessions/me | Bearer | — | Paginated list of your sessions |
 | GET | /sessions/:id | Bearer | — | Single session detail (must be yours) |
+| GET | /pricing | — | — | Current active price (or null) |
+| POST | /admin/pricing | Bearer + admin | `{ stripePriceId, amountCents, currency, interval }` | Upsert pricing (deactivates prior) |
+| POST | /billing/checkout | Bearer | — | Stripe Checkout session URL |
+| POST | /billing/webhook | Stripe sig | raw JSON | Stripe event handler |
+| GET | /billing/subscription | Bearer | — | User's current subscription (or null) |
+| POST | /billing/portal | Bearer | — | Stripe Customer Portal session URL |
 
 All protected endpoints require `Authorization: Bearer <accessToken>`.
 
@@ -101,6 +110,36 @@ score = basePoints × timeBonus × difficultyMult × hintPenalty × wrongGuessPe
 - `wrongGuessPenalty` = max(0.3, 1 − wrongGuesses × 0.1)
 
 Rounded to integer, never negative.
+
+## Billing (Stripe)
+
+1. Grab test keys at https://dashboard.stripe.com/test/apikeys. Put them in `server/.env`:
+   ```
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...  # from `stripe listen` output below
+   ```
+
+2. Create a Product + Price in Stripe dashboard (Test mode). Copy the Price ID (`price_...`).
+
+3. Forward webhooks to your local backend (separate terminal):
+   ```bash
+   stripe listen --forward-to localhost:4000/billing/webhook
+   ```
+   Copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET` and restart the backend.
+
+4. Promote yourself to admin — set `ADMIN_EMAILS=you@example.com` in `server/.env`, sign out, sign back in. Your role flips to `admin` automatically.
+
+5. Configure pricing via API (`$TOKEN` = your admin access token):
+   ```bash
+   curl -X POST http://localhost:4000/admin/pricing \
+     -H "Authorization: Bearer $TOKEN" \
+     -H 'Content-Type: application/json' \
+     -d '{"stripePriceId":"price_xxx","amountCents":900,"currency":"usd","interval":"month"}'
+   ```
+
+6. Click "Upgrade to Premium" in the app. Use Stripe's test card `4242 4242 4242 4242` (any future date, any CVC). After confirmation the webhook flips your plan to `premium`.
+
+7. Cancel via Stripe Customer Portal (linked from `/game-start` for premium users).
 
 ## Plan Gating
 
