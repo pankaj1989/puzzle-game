@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
@@ -68,11 +68,19 @@ export function GameStart() {
     <div className="min-h-screen px-4 py-10 max-w-4xl mx-auto">
       <header className="flex justify-between items-center mb-8 flex-wrap gap-3">
         <h1 className="text-3xl font-serif text-navy">Choose your game</h1>
-        <div className="text-sm text-text-muted">
-          Signed in as <strong>{user?.email}</strong>{' '}
-          <button onClick={logout} className="ml-2 text-brand-orange-dark underline">
-            Sign out
-          </button>
+        <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
+          {user?.currentStreak > 0 && (
+            <span className="px-3 py-1 rounded-full bg-brand-orange/10 border border-brand-orange text-brand-orange-dark font-semibold">
+              🔥 {user.currentStreak}-day streak
+            </span>
+          )}
+          <Link to="/leaderboards" className="underline text-navy">Leaderboards</Link>
+          <span>
+            Signed in as <strong>{user?.email}</strong>{' '}
+            <button onClick={logout} className="ml-2 text-brand-orange-dark underline">
+              Sign out
+            </button>
+          </span>
         </div>
       </header>
 
