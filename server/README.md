@@ -141,6 +141,18 @@ Rounded to integer, never negative.
 
 7. Cancel via Stripe Customer Portal (linked from `/game-start` for premium users).
 
+## Admin panel
+
+Any user whose email is in `ADMIN_EMAILS` is auto-promoted to `admin` role on sign-in. Once signed in as admin, visit http://localhost:5173/admin to:
+
+- **Dashboard** — aggregate user/puzzle/session/subscription counts
+- **Puzzles** — full CRUD, paginated
+- **Categories** — full CRUD (can't delete categories with puzzles)
+- **Users** — search by email, toggle role (user/admin) and plan (free/premium) inline
+- **Pricing** — upsert the active Stripe price (replaces the curl workflow)
+
+Non-admin users hitting `/admin` are redirected back to `/game-start`.
+
 ## Plan Gating
 
 - **Free plan:** `POST /sessions/start` with no body → random non-premium puzzle. Passing `categorySlug` returns 403 `PLAN_REQUIRED`.
