@@ -6,6 +6,11 @@ const { upsertPricingSchema } = require('../validators/billingValidators');
 const controller = require('../controllers/pricingController');
 
 router.get('/pricing', asyncHandler(controller.getActive));
+router.get(
+  '/admin/pricing',
+  authRequired({ roles: ['admin'] }),
+  asyncHandler(controller.listAll)
+);
 router.post(
   '/admin/pricing',
   authRequired({ roles: ['admin'] }),

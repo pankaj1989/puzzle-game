@@ -12,4 +12,9 @@ async function upsert(req, res) {
   res.status(201).json({ pricing });
 }
 
-module.exports = { getActive, upsert };
+async function listAll(req, res) {
+  const pricing = await Pricing.find().sort({ createdAt: -1 });
+  res.json({ pricing });
+}
+
+module.exports = { getActive, upsert, listAll };
