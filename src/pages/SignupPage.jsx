@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import GoogleSignInButton from '../auth/GoogleSignInButton';
 
 export function SignupPage() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -57,6 +59,19 @@ export function SignupPage() {
         >
           {submitting ? 'Creating account…' : 'Sign up'}
         </button>
+
+        {googleClientId && (
+          <>
+            <div className="flex items-center gap-3 my-6">
+              <div className="flex-1 h-px bg-card-gray2" />
+              <span className="text-xs text-text-muted2">OR</span>
+              <div className="flex-1 h-px bg-card-gray2" />
+            </div>
+            <div className="flex justify-center">
+              <GoogleSignInButton onError={setError} />
+            </div>
+          </>
+        )}
 
         <p className="text-sm text-text-muted mt-6 text-center">
           Already have an account? <Link to="/login" className="text-brand-orange-dark underline">Log in</Link>

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { api } from '../api/client';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
+import AdSlot from '../ads/AdSlot';
 
 export function GamePlay() {
   const location = useLocation();
@@ -323,6 +324,8 @@ function ResultScreen({ result, puzzle, session, onPlayAgain }) {
             {shareError}
           </div>
         )}
+
+        <AdSlot slot="9876543210" className="mb-6" />
 
         <button
           onClick={onPlayAgain}

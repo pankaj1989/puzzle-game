@@ -173,6 +173,29 @@ Authed endpoints:
 Sharing:
 - `GET /sessions/:id/share` — returns a short emoji-grid text block; the frontend lets the user copy it to clipboard.
 
+## Ads
+
+Google AdSense renders to **free users only**. Premium users see no ad slots.
+
+1. Get approved at https://www.google.com/adsense/
+2. Put your publisher id in `.env.local` (frontend):
+   ```
+   VITE_ADSENSE_CLIENT_ID=ca-pub-xxxxxxxxxxxxxxxx
+   ```
+3. Create ad units in the AdSense dashboard and replace the placeholder slot IDs (`1234567890`, `9876543210`) in `src/pages/GameStart.jsx` and `src/pages/GamePlay.jsx` with your real slot IDs.
+4. Redeploy. Wait for Google to start serving ads (can take several hours after approval).
+
+## Google Sign-In
+
+Backend endpoint `POST /auth/google` accepts `{ idToken }` (Plan 1). Frontend now renders a **Sign in with Google** button on both `/login` and `/signup`.
+
+1. Create an OAuth Web Client at https://console.cloud.google.com/apis/credentials
+2. Put the client id in BOTH:
+   - `server/.env`: `GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com`
+   - `.env.local` (frontend): `VITE_GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com`
+3. Add `http://localhost:5173` to the Authorized JavaScript origins in the Cloud Console.
+4. Restart both dev servers.
+
 ## Plan Gating
 
 - **Free plan:** `POST /sessions/start` with no body → random non-premium puzzle. Passing `categorySlug` returns 403 `PLAN_REQUIRED`.

@@ -8,6 +8,7 @@ import { MagicLinkPage } from './pages/MagicLinkPage';
 import { BillingSuccessPage } from './pages/BillingSuccessPage';
 import { LeaderboardsPage } from './pages/LeaderboardsPage';
 import { AuthProvider } from './auth/AuthContext';
+import GoogleProvider from './auth/GoogleProvider';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminRoute from './admin/AdminRoute';
 import AdminLayout from './admin/AdminLayout';
@@ -19,6 +20,7 @@ import { PricingPage } from './pages/admin/PricingPage';
 
 export default function App() {
   return (
+    <GoogleProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -61,5 +63,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </GoogleProvider>
   );
 }

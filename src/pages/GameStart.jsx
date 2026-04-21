@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
+import AdSlot from '../ads/AdSlot';
 
 export function GameStart() {
   const { user, logout } = useAuth();
@@ -151,6 +152,8 @@ export function GameStart() {
           {error}
         </div>
       )}
+
+      <AdSlot slot="1234567890" />
 
       <PremiumAdModal isOpen={upsellOpen} onClose={() => setUpsellOpen(false)} />
     </div>
