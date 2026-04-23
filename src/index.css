@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Alumni+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -52,20 +52,20 @@ body {
   font-size: 16px;
   line-height: 1.5;
   color: var(--color-text-body);
-  /* background: linear-gradient(
-    175deg,
-    #fffbf5 0%,
-    #fff5e9 30%,
-    #ffe8d6 60%,
-    #ffd4b8 100%
-  ); */
   background: linear-gradient(
+    140deg,
+    #FFFBF5 0%,
+    #FFF5E9 30%,
+    #FFE8D6 60%,
+    #FFD4B8 100%
+  );
+  /* background: linear-gradient(
     160deg,
     #fffbf57c 0%,
     #fff5e97c 40%,
     #ffe8d67c 50%,
-    #ffd4b87c 100%
-  );
+    #ffd4b8 100%
+  ); */
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   overflow-y: auto;

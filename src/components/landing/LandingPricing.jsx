@@ -1,9 +1,18 @@
 import { IoIosCheckmark } from "react-icons/io";
 import { PRICING } from "./landingData.js";
 import { FaCheck } from "react-icons/fa";
+import { useState } from "react";
+import { PlayExperienceModal } from "./PlayExperienceModal.jsx";
 
 export function LandingPricing() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
+    <>
+      <PlayExperienceModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     <section
       id="pricing"
       className="mx-auto mb-[4.5rem] max-w-[1442px] px-5 sm:px-6 lg:px-8"
@@ -35,12 +44,12 @@ export function LandingPricing() {
           <p className="mt-6.5 text-base  text-text-muted tracking-[0.1px]">
             {PRICING.free.description}
           </p>
-          <a
-            href={PRICING.free.cta.href}
+          <button
+            onClick={() => setIsModalOpen(true)}
             className="mt-10.5 inline-flex w-full items-center justify-center rounded-full bg-card-gray px-6 py-4 text-base font-medium text-navy-dark no-underline transition hover:bg-[#e4e8ed] active:scale-[0.98] cursor-pointer"
           >
             {PRICING.free.cta.label}
-          </a>
+          </button>
           <ul className="mb-0 mt-9.5 flex-1 space-y-4 text-[15px] text-text-muted">
             {PRICING.free.features.map((item) => (
               <li key={item} className="flex gap-3 items-center">
@@ -98,5 +107,7 @@ export function LandingPricing() {
         </article>
       </div>
     </section>
+    </>
   );
 }
+

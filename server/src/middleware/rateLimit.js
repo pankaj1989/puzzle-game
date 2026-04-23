@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const env = require('../config/env');
 
 function createLimiter({ windowMs, max, code = 'RATE_LIMITED' }) {
@@ -22,7 +23,7 @@ const magicLinkEmailLimiter = rateLimit({
   skip: () => env.NODE_ENV === 'test',
   keyGenerator: (req) => {
     const email = (req.body?.email || '').toLowerCase().trim();
-    return email || req.ip;
+    return email || ipKeyGenerator(req.ip);
   },
   handler: (req, res) => {
     res.status(429).json({ error: { code: 'RATE_LIMITED', message: 'Too many requests' } });
