@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { adminApi } from '../../admin/api';
 
 const EMPTY = {
@@ -18,14 +18,18 @@ export function PuzzlesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
+  const [categorySlug, setCategorySlug] = useState('');
+  const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState(null);
 
   async function load() {
     try {
+      const params = { page, limit: 20 };
+      if (categorySlug) params.categorySlug = categorySlug;
       const [pList, cList] = await Promise.all([
-        adminApi.listPuzzles({ page, limit: 20 }),
+        adminApi.listPuzzles(params),
         adminApi.listCategories(),
       ]);
       setRows(pList.puzzles);
@@ -38,7 +42,21 @@ export function PuzzlesPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, categorySlug]);
+
+  const categoryById = useMemo(() => {
+    const m = {};
+    for (const c of categories) m[c._id] = c;
+    return m;
+  }, [categories]);
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r) =>
+      r.plate.toLowerCase().includes(q) || r.answer.toLowerCase().includes(q)
+    );
+  }, [rows, search]);
 
   function openNew() {
     setEditing('new');
@@ -108,7 +126,7 @@ export function PuzzlesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-serif text-navy">Puzzles</h1>
         <button
           onClick={openNew}
@@ -116,6 +134,43 @@ export function PuzzlesPage() {
         >
           New puzzle
         </button>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search plate or answer"
+          className="flex-1 min-w-[200px] border border-card-gray2 rounded px-3 py-2"
+        />
+        <select
+          value={categorySlug}
+          onChange={(e) => {
+            setCategorySlug(e.target.value);
+            setPage(1);
+          }}
+          className="border border-card-gray2 rounded px-3 py-2 bg-white"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c._id} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {(search || categorySlug) && (
+          <button
+            onClick={() => {
+              setSearch('');
+              setCategorySlug('');
+              setPage(1);
+            }}
+            className="text-sm text-brand-orange-dark underline"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {error && (
@@ -241,16 +296,18 @@ export function PuzzlesPage() {
           <tr>
             <th className="p-3">Plate</th>
             <th className="p-3">Answer</th>
+            <th className="p-3">Category</th>
             <th className="p-3">Difficulty</th>
             <th className="p-3">Premium</th>
             <th className="p-3"></th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {filteredRows.map((r) => (
             <tr key={r._id} className="border-t border-card-gray2">
               <td className="p-3 font-mono">{r.plate}</td>
               <td className="p-3">{r.answer}</td>
+              <td className="p-3">{categoryById[r.categoryId]?.name || '—'}</td>
               <td className="p-3">{r.difficulty}</td>
               <td className="p-3">{r.isPremium ? '★' : ''}</td>
               <td className="p-3 text-right">
@@ -266,6 +323,13 @@ export function PuzzlesPage() {
               </td>
             </tr>
           ))}
+          {filteredRows.length === 0 && (
+            <tr>
+              <td colSpan={6} className="p-6 text-center text-text-muted2 text-sm">
+                No puzzles match.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       <div className="mt-4 flex items-center gap-3 text-sm">
@@ -284,7 +348,7 @@ export function PuzzlesPage() {
         >
           Next
         </button>
-        <span className="text-text-muted2">{total} total</span>
+        <span className="text-text-muted2">{total} total{search && ` · ${filteredRows.length} match search`}</span>
       </div>
     </div>
   );
