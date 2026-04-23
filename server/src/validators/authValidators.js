@@ -6,6 +6,8 @@ const password = z.string().min(8).max(128);
 const signupSchema = z.object({
   email,
   password,
+  firstName: z.string().min(1).max(60).optional(),
+  lastName: z.string().min(1).max(60).optional(),
   displayName: z.string().min(1).max(60).optional(),
 });
 

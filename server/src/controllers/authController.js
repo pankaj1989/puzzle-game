@@ -14,7 +14,7 @@ function hashSha(token) {
 }
 
 async function signup(req, res) {
-  const { email, password, displayName } = req.body;
+  const { email, password, firstName, lastName, displayName } = req.body;
   const existing = await User.findOne({ email });
   // Tradeoff: we return 409 on duplicate email so the client UI can surface
   // "you already have an account — log in instead". This allows email enumeration
@@ -22,7 +22,14 @@ async function signup(req, res) {
   // already do not reveal account existence.
   if (existing) throw new HttpError(409, 'Email already registered', 'EMAIL_TAKEN');
   const passwordHash = await hashPassword(password);
-  const user = await User.create({ email, passwordHash, displayName });
+  const computedDisplay = displayName || [firstName, lastName].filter(Boolean).join(' ').trim() || null;
+  const user = await User.create({
+    email,
+    passwordHash,
+    firstName: firstName || null,
+    lastName: lastName || null,
+    displayName: computedDisplay,
+  });
   await promoteIfAdminEmail(user);
   const accessToken = signAccessToken(user);
   const { token: refreshToken } = await issueRefreshToken(user);

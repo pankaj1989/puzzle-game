@@ -43,8 +43,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signup = useCallback(
-    async (email, password) => {
-      const data = await api.post('/auth/signup', { email, password }, { skipAuth: true });
+    async (payload) => {
+      // payload: { email, password, firstName?, lastName?, displayName? }
+      const data = await api.post('/auth/signup', payload, { skipAuth: true });
       completeAuth(data);
       return data.user;
     },

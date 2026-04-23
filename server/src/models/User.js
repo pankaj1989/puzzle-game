@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: { type: String, default: null },
   googleId: { type: String, default: null, index: true, sparse: true },
+  firstName: { type: String, default: null, trim: true, maxlength: 60 },
+  lastName: { type: String, default: null, trim: true, maxlength: 60 },
   displayName: { type: String, default: null, trim: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   plan: { type: String, enum: ['free', 'premium'], default: 'free' },
