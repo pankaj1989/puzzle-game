@@ -64,7 +64,46 @@ describe('POST /sessions/start', () => {
     const user = await createUser({ plan: 'premium' });
     const res = await request(app()).post('/sessions/start').set(authHeader(user)).send({ categorySlug: 'none' });
     expect(res.status).toBe(404);
-    expect(res.body.error.code).toBe('NO_PUZZLE_AVAILABLE');
+    expect(res.body.error.code).toBe('CATEGORY_NOT_FOUND');
+  });
+
+  it('returns explicit NO_PUZZLE_IN_CATEGORY when category exists but has no puzzles', async () => {
+    await Category.create({ slug: 'empty-cat', name: 'Empty Cat', isPremium: false });
+    const user = await createUser({ plan: 'premium' });
+    const res = await request(app())
+      .post('/sessions/start')
+      .set(authHeader(user))
+      .send({ categorySlug: 'empty-cat' });
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('NO_PUZZLE_IN_CATEGORY');
+  });
+
+  it('free random flow never returns puzzle from premium category', async () => {
+    const freeCategory = await Category.create({ slug: 'free-cat', name: 'Free Cat', isPremium: false });
+    const premiumCategory = await Category.create({ slug: 'premium-cat', name: 'Premium Cat', isPremium: true });
+    await Puzzle.create({
+      plate: 'FREE11',
+      answer: 'free one',
+      categoryId: freeCategory._id,
+      difficulty: 'easy',
+      clue: 'free clue',
+      revealSequence: [0, 1, 2],
+      isPremium: false,
+    });
+    await Puzzle.create({
+      plate: 'DRIFT1',
+      answer: 'drift one',
+      categoryId: premiumCategory._id,
+      difficulty: 'easy',
+      clue: 'drift clue',
+      revealSequence: [0, 1, 2],
+      isPremium: false,
+    });
+
+    const user = await createUser({ plan: 'free' });
+    const res = await request(app()).post('/sessions/start').set(authHeader(user)).send({});
+    expect(res.status).toBe(201);
+    expect(String(res.body.puzzle.categoryId)).toBe(String(freeCategory._id));
   });
 
   it('requires auth', async () => {

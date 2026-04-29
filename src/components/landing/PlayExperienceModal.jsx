@@ -1,57 +1,146 @@
 import { IoClose, IoArrowBack } from "react-icons/io5";
 import { IoIosArrowForward, IoIosShuffle } from "react-icons/io";
-import { FaBolt, FaCrown } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameStartScreen } from "./GameStartScreen.jsx";
 import { CategorySelection } from "./CategorySelection.jsx";
+import { GameStartScreen } from "./GameStartScreen.jsx";
+import { api } from "../../api/client";
+import { useAuth } from "../../auth/AuthContext";
 
 export function PlayExperienceModal({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const { simulatePremiumUpgrade } = useAuth();
   const [showGameStart, setShowGameStart] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
+  const [isPremiumFlow, setIsPremiumFlow] = useState(false);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null);
+  const [selectedCategoryName, setSelectedCategoryName] = useState("Random Category");
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState(null);
 
   // Reset state when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setShowGameStart(false);
       setShowCategorySelection(false);
+      setIsPremiumFlow(false);
+      setSelectedCategorySlug(null);
+      setSelectedCategoryName("Random Category");
+      setStarting(false);
+      setError(null);
     }
   }, [isOpen]);
 
   // Prevent background scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
-    
+
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  async function startSession() {
+    if (starting) return;
+    setError(null);
+    setStarting(true);
+    try {
+      const body = selectedCategorySlug
+        ? { categorySlug: selectedCategorySlug }
+        : {};
+      const data = await api.post("/sessions/start", body);
+      onClose?.();
+      navigate("/game", {
+        state: { session: data.session, puzzle: data.puzzle },
+      });
+    } catch (err) {
+      setError(err.message || "Could not start game");
+      setStarting(false);
+    }
+  }
+
+  async function openFreeGameStart() {
+    if (starting) return;
+    setError(null);
+    setStarting(true);
+    try {
+      const data = await api.get("/categories");
+      const categories = Array.isArray(data.categories) ? data.categories : [];
+      // Free users can only play free categories in backend.
+      const freeCategories = categories.filter((c) => !c.isPremium);
+      const pool = freeCategories.length > 0 ? freeCategories : categories;
+      if (pool.length === 0) {
+        setError("No categories available right now.");
+        setStarting(false);
+        return;
+      }
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
+      setSelectedCategorySlug(null);
+      setSelectedCategoryName(chosen?.name || "Random Category");
+      setIsPremiumFlow(false);
+      setShowGameStart(true);
+    } catch (err) {
+      setError(err.message || "Could not pick a random category");
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  async function openPremiumCategorySelection() {
+    if (starting) return;
+    setError(null);
+    setStarting(true);
+    try {
+      await simulatePremiumUpgrade();
+      setIsPremiumFlow(true);
+      setShowCategorySelection(true);
+    } catch (err) {
+      setError(err.message || "Could not upgrade account");
+    } finally {
+      setStarting(false);
+    }
+  }
+
   if (showCategorySelection) {
     return (
-      <CategorySelection 
-        isOpen={showCategorySelection} 
+      <CategorySelection
+        isOpen={showCategorySelection}
         onClose={onClose}
         onBack={() => setShowCategorySelection(false)}
+        onSelectCategory={(category) => {
+          setSelectedCategorySlug(category.slug);
+          setSelectedCategoryName(category.name || "Selected Category");
+          setIsPremiumFlow(true);
+          setShowCategorySelection(false);
+          setShowGameStart(true);
+        }}
       />
     );
   }
 
   if (showGameStart) {
     return (
-      <GameStartScreen 
-        isOpen={showGameStart} 
+      <GameStartScreen
+        isOpen={showGameStart}
         onClose={onClose}
-        onBack={() => setShowGameStart(false)}
-        onStartPlaying={() => navigate('/game')}
+        onBack={() => {
+          if (isPremiumFlow) {
+            setShowGameStart(false);
+            setShowCategorySelection(true);
+            return;
+          }
+          setShowGameStart(false);
+        }}
+        onStartPlaying={startSession}
+        categoryName={selectedCategoryName}
+        isPremiumFlow={isPremiumFlow}
       />
     );
   }
@@ -100,11 +189,15 @@ export function PlayExperienceModal({ isOpen, onClose }) {
           <div className="text-center mb-2.5 sm:mb-8">
             <span className="inline-flex items-center gap-1 sm:gap-2 rounded-full bg-[#FEF3C6CC] px-2.5 sm:px-4 py-0.5 sm:py-2 text-[9px] sm:text-[11px] font-semibold uppercase tracking-[1.1px] text-[#7B3306] mb-1.5 sm:mb-4">
               {/* <FaBolt className="size-2.5 sm:size-3" /> */}
-              <img src="/zigzag.svg" alt="Zigzag" className="w-3 h-3 sm:w-5 sm:h-5" />
+              <img
+                src="/zigzag.svg"
+                alt="Zigzag"
+                className="w-3 h-3 sm:w-5 sm:h-5"
+              />
               Choose Your Experience
             </span>
             <h2 className="font-serif text-[18px] sm:text-[40px] md:text-[52px] font-bold text-navy-dark leading-tight">
-       Ready to start?
+              Ready to start?
             </h2>
             <p className="mt-0.5 sm:mt-3 text-[#4A5565] text-[11px] sm:text-[17px] md:text-[19px] px-2">
               Pick how you'd like to play your first puzzle
@@ -114,7 +207,13 @@ export function PlayExperienceModal({ isOpen, onClose }) {
           {/* Options Grid */}
           <div className="grid md:grid-cols-2 gap-2.5 sm:gap-6">
             {/* Random Category Card */}
-            <div className="flex flex-col rounded-[14px] sm:rounded-[24px] border-2 border-gray-200 p-3 sm:p-8 hover:border-gray-300 transition-all" style={{background: 'linear-gradient(135deg, #F9FAFB 0%, rgba(243, 244, 246, 0.5) 100%)'}}>
+            <div
+              className="flex flex-col rounded-[14px] sm:rounded-[24px] border-2 border-gray-200 p-3 sm:p-8 hover:border-gray-300 transition-all"
+              style={{
+                background:
+                  "linear-gradient(135deg, #F9FAFB 0%, rgba(243, 244, 246, 0.5) 100%)",
+              }}
+            >
               <div className="size-8 sm:size-12 rounded-[25px] bg-gray-200 flex items-center justify-center mb-2 sm:mb-6">
                 <IoIosShuffle className="size-3.5 sm:size-6 text-gray-700" />
               </div>
@@ -122,13 +221,16 @@ export function PlayExperienceModal({ isOpen, onClose }) {
                 Random Category
               </h3>
               <p className="text-gray-600 text-[11px] sm:text-[15px] leading-relaxed mb-3 sm:mb-8 flex-1">
-                Jump right in! We'll pick a surprise category for you. Perfect for casual play.
+                Jump right in! We'll pick a surprise category for you. Perfect
+                for casual play.
               </p>
-              <button 
-                onClick={() => window.open('/game-start', '_blank')}
+              <button
+                type="button"
+                onClick={openFreeGameStart}
+                disabled={starting}
                 className="flex items-center justify-between w-full rounded-[12px] bg-white border border-gray-300 px-3 sm:px-6 py-2 sm:py-4 text-[12px] sm:text-[15px] font-medium text-navy-dark hover:bg-gray-50 transition-all group"
               >
-                <span>Free Forever</span>
+                <span>{starting ? "Picking category..." : "Free Forever"}</span>
                 <IoIosArrowForward className="size-4 sm:size-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
@@ -136,14 +238,18 @@ export function PlayExperienceModal({ isOpen, onClose }) {
             {/* Choose Category Card */}
             <div className="relative flex flex-col rounded-[14px] sm:rounded-[24px] navy-gradient2 p-3 sm:p-8 text-white shadow-[0_16px_48px_rgba(0,0,0,0.15)] overflow-hidden">
               {/* Glow effect */}
-              <div className="size-[250px] sm:size-[300px] absolute -top-20 -right-20 orange-glow2 blur-[100px] rounded-full pointer-events-none"/>
-              
+              <div className="size-[250px] sm:size-[300px] absolute -top-20 -right-20 orange-glow2 blur-[100px] rounded-full pointer-events-none" />
+
               {/* Icons */}
               <div className="relative flex items-center justify-between mb-2 sm:mb-6">
                 {/* <div className="size-10 sm:size-12 rounded-full flex items-center justify-center" style={{background: 'linear-gradient(to right, #FE9A00, #FFB900, #FE9A00)'}}>
                   <FaBolt className="size-4 sm:size-5 text-navy-dark" />
                 </div> */}
-                <img src="/Container.svg" alt="Container" className=" ml-[-10px]" />
+                <img
+                  src="/Container.svg"
+                  alt="Container"
+                  className=" ml-[-10px]"
+                />
                 <img src="/mu.svg" alt="mu" className="" />
 
                 {/* <div className="size-8 sm:size-10 rounded-full flex items-center justify-center" style={{background: 'linear-gradient(to right, #FE9A00, #FFB900, #FE9A00)'}}>
@@ -155,21 +261,30 @@ export function PlayExperienceModal({ isOpen, onClose }) {
                 Choose Category
               </h3>
               <p className="text-white/80 text-[11px] sm:text-[15px] leading-relaxed mb-3 sm:mb-8 flex-1 relative z-10">
-                Pick any category you want. Plus exclusive puzzles, no ads, and leaderboards.
+                Pick any category you want. Plus exclusive puzzles, no ads, and
+                leaderboards.
               </p>
-              <button 
-                onClick={() => setShowCategorySelection(true)}
+              <button
+                type="button"
+                onClick={openPremiumCategorySelection}
+                disabled={starting}
                 className="relative z-10 flex items-center justify-between w-full rounded-[12px] px-3 sm:px-6 py-2 sm:py-4 text-[12px] sm:text-[15px] font-semibold text-navy-dark transition-all group"
                 style={{
-                  background: 'linear-gradient(to right, #FE9A00, #FFB900, #FE9A00)',
-                  boxShadow: 'rgb(254 154 0 / 37%) 0px 0px 0px, rgb(254 154 0 / 43%) 0px 20px 25px -5px'
+                  background:
+                    "linear-gradient(to right, #FE9A00, #FFB900, #FE9A00)",
+                  boxShadow:
+                    "rgb(254 154 0 / 37%) 0px 0px 0px, rgb(254 154 0 / 43%) 0px 20px 25px -5px",
                 }}
               >
-                <span>$9/month</span>
+                <span>{starting ? "Upgrading..." : "$9/month"}</span>
                 <img src="/arrow.svg" alt="Arrow" className="w-5 sm:w-auto" />
               </button>
             </div>
           </div>
+
+          {error && (
+            <p className="text-center text-red-600 text-sm mt-3">{error}</p>
+          )}
 
           {/* Footer note */}
           <p className="text-center text-gray-500 text-[9px] sm:text-sm mt-2 sm:mt-6 px-2">

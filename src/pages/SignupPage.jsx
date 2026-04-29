@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
 
-export function SignupPage() {
+export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -38,7 +37,7 @@ export function SignupPage() {
         firstName: firstName.trim() || undefined,
         lastName: lastName.trim() || undefined,
       });
-      navigate('/game-start');
+      navigate('/');
     } catch (err) {
       setError(err.message || 'Signup failed');
     } finally {
@@ -46,9 +45,15 @@ export function SignupPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      <form onSubmit={onSubmit} className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8 border border-card-gray2">
+  const form = (
+    <form onSubmit={onSubmit} className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8 border border-card-gray2">
+      {isModal && (
+        <div className="mb-3 flex justify-end">
+          <button type="button" onClick={onClose} className="text-sm text-text-muted2 hover:text-navy">
+            Close
+          </button>
+        </div>
+      )}
         <h1 className="text-3xl font-serif text-navy mb-2">Create your account</h1>
         <p className="text-text-muted mb-6">Start decoding license plates.</p>
 
@@ -118,15 +123,35 @@ export function SignupPage() {
               <div className="flex-1 h-px bg-card-gray2" />
             </div>
             <div className="flex justify-center">
-              <GoogleSignInButton onError={setError} />
+              <GoogleSignInButton onError={setError} redirectTo="/" />
             </div>
           </>
         )}
 
-        <p className="text-sm text-text-muted mt-6 text-center">
-          Already have an account? <Link to="/login" className="text-brand-orange-dark underline">Log in</Link>
-        </p>
-      </form>
+      <p className="text-sm text-text-muted mt-6 text-center">
+        Already have an account?{' '}
+        {isModal ? (
+          <button type="button" onClick={onSwitchToLogin} className="text-brand-orange-dark underline">
+            Log in
+          </button>
+        ) : (
+          <Link to="/login" className="text-brand-orange-dark underline">Log in</Link>
+        )}
+      </p>
+    </form>
+  );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 py-6 overflow-y-auto">
+        {form}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      {form}
     </div>
   );
 }

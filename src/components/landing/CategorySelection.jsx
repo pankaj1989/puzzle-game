@@ -1,85 +1,60 @@
 import { IoArrowBack, IoArrowForward } from "react-icons/io5";
 import { FaCrown } from "react-icons/fa";
 import { IoIosShuffle } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../../api/client";
 
-const categories = [
-  {
-    id: 1,
-    name: "Music",
-    catname:"Music",
-    description: "Artists, albums & lyrics",
-    image: "/music.png",
-    bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #2366AD 0%, #12151C 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#007AFF24",
-    watermarkText: "MUSIC",
-   
-    puzzles: "05"
-  },
-  {
-    id: 2,
-    name: "Movies",
-    catname:"Movies & TV",
-    description: "Films, shows & directors",
-    image: "/movies.png",
-    bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #6B8659 0%, #243731 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#00FF001A",
-    puzzles: "05"
-  },
-  {
-    id: 3,
-    name: "Food",
-    catname:"Food & Drink",
-    description: "Cuisine, flavors & chefs",
-    image: "/food.png",
-    bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #BF4EB8 0%, #2A263D 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#F100FF24",
-    puzzles: "05"
-  },
-  {
-    id: 4,
-    name: "Technology",
-    catname:"Technology",
-    description: "Gadgets & breakthroughs",
-    image: "/technology.png",
-    bgColor: "radial-gradient(49.2% 52.35% at 47.26% 47.65%, #D93470 0%, #612239 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#a02454",
-    puzzles: "05"
-  },
-  {
-    id: 5,
-    name: "Animals",
-    catname:"Animals",
-    description: "Wildlife, pets & species",
-    image: "/animal.png",
-    bgColor: "radial-gradient(49.2% 52.35% at 47.26% 47.65%, #065EAC 0%, #0C3257 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#0085FF24",
-    puzzles: "05"
-  },
-  {
-    id: 6,
-    name: "Random",
-    catname:"Random Category",
-    description: "Teams, players & records",
-    image: "/random.png",
-    bgColor: " radial-gradient(49.2% 52.35% at 47.26% 47.65%, #1680BC 0%, #002D47 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */",
-    watermarkColor: "#0f5d8a",
-    watermarkText: "Random", // Custom text for Random
-    puzzles: "05",
-    watermarkStyle: { // Custom watermark styling for Random
-      fontSize: '60px', 
-      fontWeight: '900',
-      color: '#0085FF30', // Override watermark color
-      letterSpacing: '0px',
-      opacity: '0.4'
-    },
-    isRandom: true
-  }
-];
+const CATEGORY_UI = {
+  music: { catname: "Music", description: "Artists, albums & lyrics", image: "/music.png", bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #2366AD 0%, #12151C 100%)", watermarkColor: "#007AFF24", watermarkText: "MUSIC" },
+  movies: { catname: "Movies & TV", description: "Films, shows & directors", image: "/movies.png", bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #6B8659 0%, #243731 100%)", watermarkColor: "#00FF001A" },
+  food: { catname: "Food & Drink", description: "Cuisine, flavors & chefs", image: "/food.png", bgColor: "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #BF4EB8 0%, #2A263D 100%)", watermarkColor: "#F100FF24" },
+  technology: { catname: "Technology", description: "Gadgets & breakthroughs", image: "/technology.png", bgColor: "radial-gradient(49.2% 52.35% at 47.26% 47.65%, #D93470 0%, #612239 100%)", watermarkColor: "#a02454" },
+  animals: { catname: "Animals", description: "Wildlife, pets & species", image: "/animal.png", bgColor: "radial-gradient(49.2% 52.35% at 47.26% 47.65%, #065EAC 0%, #0C3257 100%)", watermarkColor: "#0085FF24" },
+};
 
-export function CategorySelection({ isOpen, onClose: _onClose, onBack }) {
-  const navigate = useNavigate();
-  
+export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectCategory }) {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await api.get("/categories");
+        if (!active) return;
+        setCategories(data.categories || []);
+      } catch (err) {
+        if (active) setError(err.message || "Could not load categories");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isOpen]);
+
+  const viewCategories = useMemo(
+    () =>
+      categories.map((c, idx) => ({
+        id: c._id || c.slug || idx,
+        slug: c.slug,
+        name: c.name,
+        ...CATEGORY_UI[c.slug],
+        catname: CATEGORY_UI[c.slug]?.catname || c.name,
+        description: CATEGORY_UI[c.slug]?.description || "Solve puzzles from this category.",
+        bgColor:
+          CATEGORY_UI[c.slug]?.bgColor ||
+          "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #2366AD 0%, #12151C 100%)",
+        watermarkColor: CATEGORY_UI[c.slug]?.watermarkColor || "#007AFF24",
+      })),
+    [categories]
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -132,10 +107,14 @@ export function CategorySelection({ isOpen, onClose: _onClose, onBack }) {
 
           {/* Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[50px]">
-            {categories.map((category) => (
+            {loading && <p className="col-span-full text-center text-text-muted">Loading categories...</p>}
+            {error && <p className="col-span-full text-center text-red-600">{error}</p>}
+            {!loading &&
+              !error &&
+              viewCategories.map((category) => (
               <div
                 key={category.id}
-                onClick={() => navigate('/game')}
+                onClick={() => onSelectCategory?.({ slug: category.slug, name: category.catname || category.name })}
                 className="group  relative rounded-[35px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)] transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
               >
                 {/* Top Section with Image */}

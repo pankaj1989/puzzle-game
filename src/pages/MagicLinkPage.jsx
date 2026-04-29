@@ -40,7 +40,7 @@ export function MagicLinkPage() {
           <>
             <h1 className="text-2xl font-serif text-navy mb-3">Link problem</h1>
             <p className="text-text-muted mb-6">{state.error}</p>
-            <Link to="/login" className="text-brand-orange-dark underline">Back to login</Link>
+            <Link to="/?auth=login" className="text-brand-orange-dark underline">Back to login</Link>
           </>
         )}
       </div>

@@ -90,7 +90,29 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = { user, loading, signup, login, verifyMagicLink, loginWithGoogle, logout };
+  const simulatePremiumUpgrade = useCallback(async () => {
+    const data = await api.post('/billing/simulate-success', {});
+    if (data?.user) {
+      userStorage.set(data.user);
+      setUser(data.user);
+      return data.user;
+    }
+    const fresh = await api.get('/auth/me');
+    userStorage.set(fresh.user);
+    setUser(fresh.user);
+    return fresh.user;
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    signup,
+    login,
+    verifyMagicLink,
+    loginWithGoogle,
+    logout,
+    simulatePremiumUpgrade,
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

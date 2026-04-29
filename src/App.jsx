@@ -1,9 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { LandingPage } from './components/landing';
+import { LandingPage } from './pages/LandingPage.jsx';
 import { GameStart } from './pages/GameStart';
 import { GamePlay } from './pages/GamePlay';
-import { SignupPage } from './pages/SignupPage';
-import { LoginPage } from './pages/LoginPage';
 import { MagicLinkPage } from './pages/MagicLinkPage';
 import { BillingSuccessPage } from './pages/BillingSuccessPage';
 import { LeaderboardsPage } from './pages/LeaderboardsPage';
@@ -25,8 +23,6 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/magic" element={<MagicLinkPage />} />
           <Route path="/billing/success" element={<BillingSuccessPage />} />
           <Route path="/leaderboards" element={<LeaderboardsPage />} />

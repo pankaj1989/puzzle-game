@@ -1,5 +1,6 @@
 const GameSession = require('../models/GameSession');
 const Puzzle = require('../models/Puzzle');
+const Category = require('../models/Category');
 const { pickRandomPuzzle } = require('../services/puzzleService');
 const { calculateScore, normalizeAnswer } = require('../services/scoringService');
 const { computeStreakUpdate } = require('../services/streakService');
@@ -39,15 +40,27 @@ async function startSession(req, res) {
   const { categorySlug } = req.body;
   const isFree = req.user.plan !== 'premium';
 
-  if (isFree && categorySlug) {
-    throw new HttpError(403, 'Premium plan required to choose a category', 'PLAN_REQUIRED');
+  let requestedCategory = null;
+  if (categorySlug) {
+    requestedCategory = await Category.findOne({ slug: categorySlug });
+    if (!requestedCategory) {
+      throw new HttpError(404, `Category '${categorySlug}' not found`, 'CATEGORY_NOT_FOUND');
+    }
+    if (isFree) {
+      throw new HttpError(403, 'Premium plan required to choose this category', 'PLAN_REQUIRED');
+    }
   }
 
   const puzzle = await pickRandomPuzzle({
-    categorySlug,
+    categoryId: requestedCategory?._id,
     freeOnly: isFree,
   });
-  if (!puzzle) throw new HttpError(404, 'No puzzle available', 'NO_PUZZLE_AVAILABLE');
+  if (!puzzle) {
+    if (categorySlug) {
+      throw new HttpError(404, `No puzzle available for category '${categorySlug}'`, 'NO_PUZZLE_IN_CATEGORY');
+    }
+    throw new HttpError(404, 'No puzzle available', 'NO_PUZZLE_AVAILABLE');
+  }
 
   const session = await GameSession.create({
     userId: req.user._id,

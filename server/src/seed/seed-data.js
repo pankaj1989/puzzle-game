@@ -56,6 +56,10 @@ module.exports = {
     { plate: 'NET2WK', answer: 'network', categorySlug: 'technology', difficulty: 'easy',
       clue: 'Connected computers',
       revealSequence: [0, 3, 6, 1, 2, 4, 5], isPremium: false },
+    // "cloud nine" = 10 chars (0-9)
+    { plate: 'CLD9UP', answer: 'cloud nine', categorySlug: 'technology', difficulty: 'medium',
+      clue: 'High spirits in the sky',
+      revealSequence: [0, 5, 6, 9, 1, 2, 3, 4, 7, 8], isPremium: false },
 
     // food (premium) - "pizza one" = 9 chars (0-8)
     { plate: 'PIZZA1', answer: 'pizza one', categorySlug: 'food', difficulty: 'easy',
@@ -69,6 +73,10 @@ module.exports = {
     { plate: 'TACO2U', answer: 'taco to you', categorySlug: 'food', difficulty: 'medium',
       clue: 'Delivery order',
       revealSequence: [0, 4, 5, 7, 8, 1, 2, 3, 6, 9, 10], isPremium: true },
+    // "burger time" = 11 chars (0-10)
+    { plate: 'BURGRT', answer: 'burger time', categorySlug: 'food', difficulty: 'easy',
+      clue: 'Fast-food hour',
+      revealSequence: [0, 4, 5, 10, 1, 2, 3, 6, 7, 8, 9], isPremium: true },
 
     // animals (premium) - "lion forty two" = 14 chars (0-13)
     { plate: 'LION42', answer: 'lion forty two', categorySlug: 'animals', difficulty: 'hard',
@@ -91,5 +99,9 @@ module.exports = {
     { plate: 'RND0MZ', answer: 'random z', categorySlug: 'random', difficulty: 'medium',
       clue: 'Unpredictable ending',
       revealSequence: [0, 6, 7, 1, 2, 3, 4, 5], isPremium: true },
+    // "odds and ends" = 13 chars (0-12)
+    { plate: 'ODDEND', answer: 'odds and ends', categorySlug: 'random', difficulty: 'hard',
+      clue: 'A mixed collection of leftovers',
+      revealSequence: [0, 4, 5, 9, 12, 1, 2, 3, 6, 7, 8, 10, 11], isPremium: true },
   ],
 };

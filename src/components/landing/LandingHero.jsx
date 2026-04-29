@@ -1,7 +1,7 @@
 import CtaButton from "../common/CtaButton.jsx";
 import { HERO, HERO_HIGHLIGHTS, HERO_IMAGE } from "./landingData.js";
 
-export function LandingHero() {
+export function LandingHero({ onOpenSignup }) {
   return (
     <section
       id="hero"
@@ -34,6 +34,7 @@ export function LandingHero() {
         <CtaButton
           label={HERO.primaryCta.label}
           className="flex px-[30px]! w-full max-w-[435px]! xl:mt-8 mt-6 mx-auto lg:mx-0"
+          onClick={onOpenSignup}
         />
         <ul
           className="mt-6 flex flex-wrap justify-center xl:gap-14 gap-10 text-[0.75rem] text-text-muted lg:justify-start"

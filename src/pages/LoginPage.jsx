@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
 
-export function LoginPage() {
+export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectTo = location.state?.from || '/game-start';
+  const redirectTo = '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +23,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate(redirectTo);
+      navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -49,9 +48,15 @@ export function LoginPage() {
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <form onSubmit={onSubmitLogin} className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8 border border-card-gray2">
+  const form = (
+    <form onSubmit={onSubmitLogin} className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8 border border-card-gray2">
+      {isModal && (
+        <div className="mb-3 flex justify-end">
+          <button type="button" onClick={onClose} className="text-sm text-text-muted2 hover:text-navy">
+            Close
+          </button>
+        </div>
+      )}
         <h1 className="text-3xl font-serif text-navy mb-2">Welcome back</h1>
         <p className="text-text-muted mb-6">Sign in to continue playing.</p>
 
@@ -117,10 +122,30 @@ export function LoginPage() {
           </p>
         )}
 
-        <p className="text-sm text-text-muted mt-6 text-center">
-          New here? <Link to="/signup" className="text-brand-orange-dark underline">Create an account</Link>
-        </p>
-      </form>
+      <p className="text-sm text-text-muted mt-6 text-center">
+        New here?{' '}
+        {isModal ? (
+          <button type="button" onClick={onSwitchToSignup} className="text-brand-orange-dark underline">
+            Create an account
+          </button>
+        ) : (
+          <Link to="/signup" className="text-brand-orange-dark underline">Create an account</Link>
+        )}
+      </p>
+    </form>
+  );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4">
+        {form}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      {form}
     </div>
   );
 }

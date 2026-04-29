@@ -1,14 +1,19 @@
 const Puzzle = require('../models/Puzzle');
 const Category = require('../models/Category');
 
-async function pickRandomPuzzle({ categorySlug, freeOnly } = {}) {
+async function pickRandomPuzzle({ categoryId, freeOnly } = {}) {
   const filter = {};
-  if (freeOnly) filter.isPremium = false;
-  if (categorySlug) {
-    const category = await Category.findOne({ slug: categorySlug });
-    if (!category) return null;
-    filter.categoryId = category._id;
+
+  if (categoryId) {
+    filter.categoryId = categoryId;
   }
+
+  if (freeOnly) {
+    filter.isPremium = false;
+    const freeCategories = await Category.find({ isPremium: false }).select('_id');
+    filter.categoryId = filter.categoryId || { $in: freeCategories.map((c) => c._id) };
+  }
+
   const results = await Puzzle.aggregate([
     { $match: filter },
     { $sample: { size: 1 } },

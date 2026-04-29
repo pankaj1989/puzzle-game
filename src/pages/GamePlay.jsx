@@ -111,7 +111,7 @@ function GameScreen({ initialSession, puzzle }) {
       <div className="mx-auto mb-8 sm:mb-12">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <button
-            onClick={() => navigate('/game-start')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#FFFFFF6E] hover:bg-gray-50 text-gray-800 font-medium text-[14px] sm:text-[15px] shadow-sm border border-white"
           >
             <IoArrowBack className="size-4 sm:size-5" />

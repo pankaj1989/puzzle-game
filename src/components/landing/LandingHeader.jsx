@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { IoArrowForwardOutline } from "react-icons/io5";
 import { BRAND, HEADER_CTA, NAV_LINKS } from "./landingData.js";
 import { useAuth } from "../../auth/AuthContext";
 
-export function LandingHeader() {
+export function LandingHeader({ onOpenLogin, onStartPlaying }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
 
@@ -97,24 +96,28 @@ export function LandingHeader() {
               >
                 Sign out
               </button>
-              <Link
-                to="/game-start"
+              <button
+                type="button"
+                onClick={onStartPlaying}
                 className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full navy-gradient px-[28px] py-[23.5px] text-[20px] text-white! no-underline shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] leading-0 group cursor-pointer"
               >
                 <span className="mb-0.5">Play</span>
                 <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300" />
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="hidden lg:flex items-center gap-4">
-              <Link to="/login" className="text-sm font-medium text-navy hover:underline">Log in</Link>
-              <Link
-                to="/signup"
+              <button type="button" onClick={onOpenLogin} className="text-sm font-medium text-navy hover:underline">
+                Log in
+              </button>
+              <button
+                type="button"
+                  onClick={onStartPlaying}
                 className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full navy-gradient px-[28px] py-[23.5px] text-[20px] text-white! no-underline shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] leading-0 group cursor-pointer"
               >
                 <span className="mb-0.5">{HEADER_CTA.label}</span>
                 <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300" />
-              </Link>
+              </button>
             </div>
           )}
         </div>
@@ -194,14 +197,14 @@ export function LandingHeader() {
             {user ? (
               <div className="mt-5 space-y-3">
                 <div className="text-center text-sm text-text-muted2 truncate">{user.email}</div>
-                <Link
-                  to="/game-start"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => { setIsMenuOpen(false); onStartPlaying?.(); }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full navy-gradient px-6 py-4 text-base font-semibold text-white! shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] group max-w-[520px] mx-auto"
                 >
                   Play
                   <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300 text-lg" />
-                </Link>
+                </button>
                 <button
                   type="button"
                   onClick={() => { setIsMenuOpen(false); logout(); }}
@@ -212,21 +215,21 @@ export function LandingHeader() {
               </div>
             ) : (
               <div className="mt-5 space-y-3">
-                <Link
-                  to="/signup"
-                  onClick={() => setIsMenuOpen(false)}
+                <button
+                  type="button"
+                  onClick={() => { setIsMenuOpen(false); onStartPlaying?.(); }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full navy-gradient px-6 py-4 text-base font-semibold text-white! shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] group max-w-[520px] mx-auto"
                 >
                   {HEADER_CTA.label}
                   <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300 text-lg" />
-                </Link>
-                <Link
-                  to="/login"
-                  onClick={() => setIsMenuOpen(false)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsMenuOpen(false); onOpenLogin?.(); }}
                   className="block w-full text-center text-sm font-medium text-navy underline"
                 >
                   Log in
-                </Link>
+                </button>
               </div>
             )}
           </div>

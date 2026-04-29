@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { FaCrown } from 'react-icons/fa';
-import { api } from '../../api/client';
+import { useAuth } from '../../auth/AuthContext';
 
 export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
+  const { simulatePremiumUpgrade } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -11,8 +12,9 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
     setError(null);
     setLoading(true);
     try {
-      const { url } = await api.post('/billing/checkout', {});
-      window.location.href = url;
+      await simulatePremiumUpgrade();
+      onUpgrade?.();
+      onClose?.();
     } catch (err) {
       setError(err.message || 'Could not start checkout');
       setLoading(false);

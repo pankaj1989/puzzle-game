@@ -118,4 +118,11 @@ async function portal(req, res) {
   res.json({ url });
 }
 
-module.exports = { checkout, webhook, getSubscription, portal };
+async function simulateSuccess(req, res) {
+  // Temporary dev shortcut until Stripe checkout is integrated end-to-end.
+  req.user.plan = 'premium';
+  await req.user.save();
+  res.json({ user: req.user, simulated: true });
+}
+
+module.exports = { checkout, webhook, getSubscription, portal, simulateSuccess };
