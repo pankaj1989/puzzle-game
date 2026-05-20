@@ -20,7 +20,7 @@ export function MagicLinkPage() {
         await verifyMagicLink(token);
         if (!active) return;
         setState({ status: 'ok', error: null });
-        navigate('/game-start', { replace: true });
+        navigate('/?play=1', { replace: true });
       } catch (err) {
         if (!active) return;
         setState({ status: 'error', error: err.message || 'Link invalid or expired.' });

@@ -44,7 +44,7 @@ export function LeaderboardsPage() {
     <div className="min-h-screen px-4 py-10 max-w-3xl mx-auto">
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-serif text-navy">Leaderboards</h1>
-        <Link to="/game-start" className="text-sm text-brand-orange-dark underline">
+        <Link to="/?play=1" className="text-sm text-brand-orange-dark underline">
           Back to game
         </Link>
       </header>

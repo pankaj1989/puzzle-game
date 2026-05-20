@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CategorySelection } from "./CategorySelection.jsx";
 import { GameStartScreen } from "./GameStartScreen.jsx";
+import { displayForCategory } from "./categoryUiConfig.js";
 import { api } from "../../api/client";
+import { getUserFriendlyApiMessage } from "../../api/apiErrors";
 import { useAuth } from "../../auth/AuthContext";
+import { useModalStack } from "../../hooks/useModalStack";
 
 export function PlayExperienceModal({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -14,7 +17,11 @@ export function PlayExperienceModal({ isOpen, onClose }) {
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [isPremiumFlow, setIsPremiumFlow] = useState(false);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState("Random Category");
+  const [selectedCategoryName, setSelectedCategoryName] = useState("");
+  const [freePreviewImage, setFreePreviewImage] = useState(null);
+  const [freePreviewBlurb, setFreePreviewBlurb] = useState(null);
+  /** True when Random was chosen from premium category list — same game-start copy as Free Forever, but Back returns to picker. */
+  const [premiumPickerRandomFlow, setPremiumPickerRandomFlow] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -25,25 +32,25 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       setShowCategorySelection(false);
       setIsPremiumFlow(false);
       setSelectedCategorySlug(null);
-      setSelectedCategoryName("Random Category");
+      setSelectedCategoryName("");
+      setFreePreviewImage(null);
+      setFreePreviewBlurb(null);
+      setPremiumPickerRandomFlow(false);
       setStarting(false);
       setError(null);
     }
   }, [isOpen]);
 
-  // Prevent background scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+  useModalStack(isOpen);
 
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen || showCategorySelection || showGameStart) return undefined;
+    function onKey(e) {
+      if (e.key === "Escape") onClose?.();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, showCategorySelection, showGameStart, onClose]);
 
   if (!isOpen) return null;
 
@@ -57,13 +64,34 @@ export function PlayExperienceModal({ isOpen, onClose }) {
         : {};
       const data = await api.post("/sessions/start", body);
       onClose?.();
-      navigate("/game", {
-        state: { session: data.session, puzzle: data.puzzle },
+      navigate(`/game/${data.session.id}`, {
+        state: {
+          session: data.session,
+          puzzle: data.puzzle,
+          category: data.category ?? null,
+        },
       });
     } catch (err) {
-      setError(err.message || "Could not start game");
+      setError(getUserFriendlyApiMessage(err, "Could not start game"));
       setStarting(false);
     }
+  }
+
+  async function loadRandomCategoryPreview({ freePoolOnly }) {
+    const data = await api.get("/categories");
+    const list = Array.isArray(data.categories) ? data.categories : [];
+    const freePool = list.filter((c) => !c.isPremium);
+    const pool = freePoolOnly ? (freePool.length > 0 ? freePool : list) : list;
+    if (pool.length === 0) {
+      setError("No categories available right now.");
+      throw new Error("no_categories");
+    }
+    const raw = pool[Math.floor(Math.random() * pool.length)];
+    const d = displayForCategory(raw);
+    setSelectedCategorySlug(null);
+    setSelectedCategoryName(d.displayName);
+    setFreePreviewImage(d.image || "/semistar.png");
+    setFreePreviewBlurb(d.description);
   }
 
   async function openFreeGameStart() {
@@ -71,23 +99,14 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     setError(null);
     setStarting(true);
     try {
-      const data = await api.get("/categories");
-      const categories = Array.isArray(data.categories) ? data.categories : [];
-      // Free users can only play free categories in backend.
-      const freeCategories = categories.filter((c) => !c.isPremium);
-      const pool = freeCategories.length > 0 ? freeCategories : categories;
-      if (pool.length === 0) {
-        setError("No categories available right now.");
-        setStarting(false);
-        return;
-      }
-      const chosen = pool[Math.floor(Math.random() * pool.length)];
-      setSelectedCategorySlug(null);
-      setSelectedCategoryName(chosen?.name || "Random Category");
+      await loadRandomCategoryPreview({ freePoolOnly: true });
+      setPremiumPickerRandomFlow(false);
       setIsPremiumFlow(false);
       setShowGameStart(true);
     } catch (err) {
-      setError(err.message || "Could not pick a random category");
+      if (err?.message !== "no_categories") {
+        setError(getUserFriendlyApiMessage(err, "Could not load categories"));
+      }
     } finally {
       setStarting(false);
     }
@@ -102,7 +121,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       setIsPremiumFlow(true);
       setShowCategorySelection(true);
     } catch (err) {
-      setError(err.message || "Could not upgrade account");
+      setError(getUserFriendlyApiMessage(err, "Could not upgrade account"));
     } finally {
       setStarting(false);
     }
@@ -114,9 +133,31 @@ export function PlayExperienceModal({ isOpen, onClose }) {
         isOpen={showCategorySelection}
         onClose={onClose}
         onBack={() => setShowCategorySelection(false)}
-        onSelectCategory={(category) => {
+        onSelectCategory={async (category) => {
+          if (category.slug === "random") {
+            if (starting) return;
+            setError(null);
+            setStarting(true);
+            try {
+              await loadRandomCategoryPreview({ freePoolOnly: false });
+              setPremiumPickerRandomFlow(true);
+              setIsPremiumFlow(false);
+              setShowCategorySelection(false);
+              setShowGameStart(true);
+            } catch (err) {
+              if (err?.message !== "no_categories") {
+                setError(getUserFriendlyApiMessage(err, "Could not load categories"));
+              }
+            } finally {
+              setStarting(false);
+            }
+            return;
+          }
+          setPremiumPickerRandomFlow(false);
           setSelectedCategorySlug(category.slug);
           setSelectedCategoryName(category.name || "Selected Category");
+          setFreePreviewImage(category.image || null);
+          setFreePreviewBlurb(category.description || null);
           setIsPremiumFlow(true);
           setShowCategorySelection(false);
           setShowGameStart(true);
@@ -127,21 +168,37 @@ export function PlayExperienceModal({ isOpen, onClose }) {
 
   if (showGameStart) {
     return (
-      <GameStartScreen
-        isOpen={showGameStart}
-        onClose={onClose}
-        onBack={() => {
-          if (isPremiumFlow) {
+      <>
+        <GameStartScreen
+          isOpen={showGameStart}
+          onClose={onClose}
+          onBack={() => {
+            if (isPremiumFlow) {
+              setShowGameStart(false);
+              setShowCategorySelection(true);
+              return;
+            }
+            if (premiumPickerRandomFlow) {
+              setPremiumPickerRandomFlow(false);
+              setShowGameStart(false);
+              setShowCategorySelection(true);
+              return;
+            }
             setShowGameStart(false);
-            setShowCategorySelection(true);
-            return;
-          }
-          setShowGameStart(false);
-        }}
-        onStartPlaying={startSession}
-        categoryName={selectedCategoryName}
-        isPremiumFlow={isPremiumFlow}
-      />
+          }}
+          onStartPlaying={startSession}
+          categoryName={selectedCategoryName}
+          isPremiumFlow={isPremiumFlow}
+          isStarting={starting}
+          categoryHeroImage={freePreviewImage}
+          categoryBlurb={freePreviewBlurb}
+        />
+        {error && (
+          <div className="fixed bottom-6 left-1/2 z-modal-top max-w-[min(100vw-2rem,28rem)] -translate-x-1/2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-600 shadow-lg">
+            {error}
+          </div>
+        )}
+      </>
     );
   }
 
@@ -149,12 +206,12 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/50 z-modal-backdrop backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Top Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-5 md:px-8 py-4 sm:py-6 bg-[antiquewhite]/90 backdrop-blur-sm">
+      <div className="fixed top-0 left-0 right-0 z-modal flex items-center justify-between px-4 sm:px-5 md:px-8 py-4 sm:py-6 bg-[antiquewhite]/90 backdrop-blur-sm">
         {/* Back button */}
         <button
           onClick={onClose}
@@ -174,7 +231,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       </div>
 
       {/* Modal */}
-      <div className="fixed inset-0 z-40 flex top-[70px] items-center justify-center p-2 sm:p-4">
+      <div className="fixed inset-0 z-modal flex top-[70px] items-center justify-center p-2 sm:p-4">
         <div className="relative bg-white rounded-[16px] sm:rounded-[32px] max-w-[980px] w-full p-3 sm:p-8 md:p-12 shadow-[0_24px_80px_rgba(0,0,0,0.2)] my-[72px] sm:my-0">
           {/* Close button */}
           <button

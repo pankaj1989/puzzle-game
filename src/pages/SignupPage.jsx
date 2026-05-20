@@ -1,12 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
+import { getUserFriendlyApiMessage } from '../api/apiErrors';
+import { useModalStack } from '../hooks/useModalStack';
 
 export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  useModalStack(isModal);
+
+  useEffect(() => {
+    if (!isModal) return undefined;
+    function onKey(e) {
+      if (e.key === 'Escape') onClose?.();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isModal, onClose]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -39,7 +52,7 @@ export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
       });
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Signup failed');
+      setError(getUserFriendlyApiMessage(err, 'Signup failed'));
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +156,7 @@ export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 py-6 overflow-y-auto">
+      <div className="fixed inset-0 z-modal-top flex items-center justify-center bg-black/60 px-4 py-6 overflow-y-auto">
         {form}
       </div>
     );

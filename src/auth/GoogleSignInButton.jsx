@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-export default function GoogleSignInButton({ onError, redirectTo = '/game-start' }) {
+export default function GoogleSignInButton({ onError, redirectTo = '/' }) {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);

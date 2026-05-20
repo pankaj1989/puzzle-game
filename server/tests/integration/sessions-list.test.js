@@ -68,6 +68,10 @@ describe('GET /sessions/:id', () => {
     const res = await request(app()).get(`/sessions/${session._id}`).set(authHeader(user));
     expect(res.status).toBe(200);
     expect(res.body.session.id).toBe(session._id.toString());
+    expect(res.body.puzzle).toBeDefined();
+    expect(res.body.puzzle.plate).toBe('X');
+    expect(res.body.puzzle.answer).toBeUndefined();
+    expect(res.body.category).toEqual({ slug: 'movies', name: 'Movies' });
   });
 
   it('403 when owned by another user', async () => {

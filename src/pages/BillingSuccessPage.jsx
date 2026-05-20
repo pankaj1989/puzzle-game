@@ -53,7 +53,7 @@ export function BillingSuccessPage() {
             <h1 className="text-3xl font-serif text-navy mb-2">You're Premium 🎉</h1>
             <p className="text-text-muted mb-6">All categories and puzzles are unlocked.</p>
             <Link
-              to="/game-start"
+              to="/?play=1"
               className="inline-block py-3 px-6 rounded-lg navy-gradient text-cream font-semibold border-2 border-brand-orange"
             >
               Start playing
@@ -67,7 +67,7 @@ export function BillingSuccessPage() {
               Payment looks successful but we haven't received confirmation yet. Your plan is{' '}
               <strong>{plan}</strong>. Refresh in a minute or contact support.
             </p>
-            <Link to="/game-start" className="text-brand-orange-dark underline">Back to game</Link>
+            <Link to="/?play=1" className="text-brand-orange-dark underline">Back to game</Link>
           </>
         )}
       </div>

@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { FaCrown } from 'react-icons/fa';
 import { useAuth } from '../../auth/AuthContext';
+import { getUserFriendlyApiMessage } from '../../api/apiErrors';
+import { useModalStack } from '../../hooks/useModalStack';
 
 export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
   const { simulatePremiumUpgrade } = useAuth();
@@ -16,26 +18,16 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
       onUpgrade?.();
       onClose?.();
     } catch (err) {
-      setError(err.message || 'Could not start checkout');
+      setError(getUserFriendlyApiMessage(err, 'Could not start checkout'));
       setLoading(false);
     }
   }
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useModalStack(isOpen);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-9">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-9">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-[#0000007d]"

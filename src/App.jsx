@@ -35,6 +35,14 @@ export default function App() {
             }
           />
           <Route
+            path="/game/:sessionId"
+            element={
+              <ProtectedRoute>
+                <GamePlay />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/game"
             element={
               <ProtectedRoute>

@@ -27,6 +27,15 @@ export function LandingPage() {
   }, [searchParams])
 
   useEffect(() => {
+    if (searchParams.get('play') === '1') {
+      setIsPlayModalOpen(true)
+      const next = new URLSearchParams(searchParams)
+      next.delete('play')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
     if (user && authModal) {
       setAuthModal(null)
     }

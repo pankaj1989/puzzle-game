@@ -30,6 +30,7 @@ describe('POST /sessions/start', () => {
     expect(res.body.session.id).toBeDefined();
     expect(res.body.puzzle.plate).toBe('LUV2MRO');
     expect(res.body.puzzle.answer).toBeUndefined();
+    expect(res.body.category).toEqual({ slug: 'movies', name: 'movies' });
     expect(res.body.puzzle.revealSequence).toEqual([3, 1, 5, 0, 2, 4, 6]);
     const count = await GameSession.countDocuments({ userId: user._id });
     expect(count).toBe(1);
@@ -50,6 +51,7 @@ describe('POST /sessions/start', () => {
     const res = await request(app()).post('/sessions/start').set(authHeader(user)).send({ categorySlug: 'music' });
     expect(res.status).toBe(201);
     expect(res.body.puzzle).toBeDefined();
+    expect(res.body.category).toEqual({ slug: 'music', name: 'music' });
   });
 
   it('premium user: no category returns random across all', async () => {
@@ -58,6 +60,8 @@ describe('POST /sessions/start', () => {
     const res = await request(app()).post('/sessions/start').set(authHeader(user)).send({});
     expect(res.status).toBe(201);
     expect(res.body.puzzle).toBeDefined();
+    expect(res.body.category).toBeDefined();
+    expect(res.body.category.slug).toBe('music');
   });
 
   it('returns 404 when no puzzle matches', async () => {

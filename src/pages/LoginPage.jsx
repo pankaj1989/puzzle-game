@@ -1,13 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
+import { useModalStack } from '../hooks/useModalStack';
 
 export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const redirectTo = '/';
+
+  useModalStack(isModal);
+
+  useEffect(() => {
+    if (!isModal) return undefined;
+    function onKey(e) {
+      if (e.key === 'Escape') onClose?.();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isModal, onClose]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +38,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(getUserFriendlyApiMessage(err, 'Login failed'));
     } finally {
       setSubmitting(false);
     }
@@ -42,7 +55,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
       setMagicRequested(true);
       if (res?.devMagicLinkUrl) setDevLink(res.devMagicLinkUrl);
     } catch (err) {
-      setError(err.message || 'Could not send magic link');
+      setError(getUserFriendlyApiMessage(err, 'Could not send magic link'));
     }
   }
 
@@ -137,7 +150,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4">
+      <div className="fixed inset-0 z-modal-top flex items-center justify-center bg-black/60 px-4">
         {form}
       </div>
     );

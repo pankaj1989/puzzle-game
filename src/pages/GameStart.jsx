@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
+import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { GameStartScreen } from '../components/landing/GameStartScreen';
 
 export function GameStart() {
@@ -9,7 +10,7 @@ export function GameStart() {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
   const categorySlug = location.state?.categorySlug || null;
-  const categoryName = location.state?.categoryName || 'Random Category';
+  const categoryName = location.state?.categoryName || '';
 
   async function startSession() {
     setError(null);
@@ -17,9 +18,15 @@ export function GameStart() {
     try {
       const body = categorySlug ? { categorySlug } : {};
       const data = await api.post('/sessions/start', body);
-      navigate('/game', { state: { session: data.session, puzzle: data.puzzle } });
+      navigate(`/game/${data.session.id}`, {
+        state: {
+          session: data.session,
+          puzzle: data.puzzle,
+          category: data.category ?? null,
+        },
+      });
     } catch (err) {
-      setError(err.message);
+      setError(getUserFriendlyApiMessage(err));
       setStarting(false);
     }
   }
@@ -32,15 +39,11 @@ export function GameStart() {
         onStartPlaying={startSession}
         categoryName={categoryName}
         isPremiumFlow={Boolean(categorySlug)}
+        isStarting={starting}
       />
       {error && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-60 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <div className="fixed bottom-6 left-1/2 z-modal-top max-w-[min(100vw-2rem,28rem)] -translate-x-1/2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-600 shadow-lg">
           {error}
-        </div>
-      )}
-      {starting && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-60 text-sm text-navy bg-white border border-card-gray2 rounded px-3 py-2">
-          Starting game...
         </div>
       )}
     </>

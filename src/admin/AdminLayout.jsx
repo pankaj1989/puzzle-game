@@ -34,7 +34,7 @@ export default function AdminLayout() {
         </nav>
         <div className="mt-8 text-xs">
           <button onClick={logout} className="underline">Sign out</button>{' '}·{' '}
-          <a href="/game-start" className="underline">Back to game</a>
+          <a href="/?play=1" className="underline">Back to game</a>
         </div>
       </aside>
       <main className="flex-1 p-6 bg-cream/30">

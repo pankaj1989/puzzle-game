@@ -21,6 +21,11 @@ function serializePuzzle(puzzle) {
   };
 }
 
+function serializeCategorySummary(category) {
+  if (!category) return null;
+  return { slug: category.slug, name: category.name };
+}
+
 function serializeSession(session) {
   return {
     id: session._id,
@@ -67,9 +72,12 @@ async function startSession(req, res) {
     puzzleId: puzzle._id,
   });
 
+  const categoryDoc = await Category.findById(puzzle.categoryId).select('slug name').lean();
+
   res.status(201).json({
     session: serializeSession(session),
     puzzle: serializePuzzle(puzzle),
+    category: serializeCategorySummary(categoryDoc),
   });
 }
 
@@ -178,7 +186,14 @@ async function getSession(req, res) {
   if (session.userId.toString() !== req.user._id.toString()) {
     throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
   }
-  res.json({ session: serializeSession(session) });
+  const puzzle = await Puzzle.findById(session.puzzleId);
+  if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
+  const categoryDoc = await Category.findById(puzzle.categoryId).select('slug name').lean();
+  res.json({
+    session: serializeSession(session),
+    puzzle: serializePuzzle(puzzle),
+    category: serializeCategorySummary(categoryDoc),
+  });
 }
 
 async function getShare(req, res) {
@@ -209,4 +224,5 @@ module.exports = {
   getShare,
   serializeSession,
   serializePuzzle,
+  serializeCategorySummary,
 };
