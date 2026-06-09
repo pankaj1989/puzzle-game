@@ -22,7 +22,4 @@ export const adminApi = {
     return api.get(`/admin/users${q ? `?${q}` : ''}`);
   },
   updateUser: (id, body) => api.patch(`/admin/users/${id}`, body),
-
-  listPricing: () => api.get('/admin/pricing'),
-  upsertPricing: (body) => api.post('/admin/pricing', body),
 };

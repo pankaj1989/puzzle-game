@@ -1,128 +1,114 @@
 const env = require('../config/env');
-const Pricing = require('../models/Pricing');
+const premium = require('../config/premium');
 const User = require('../models/User');
-const Subscription = require('../models/Subscription');
+const PremiumPurchase = require('../models/PremiumPurchase');
 const stripeService = require('../services/stripeService');
 const { HttpError } = require('../middleware/errorHandler');
 
-async function checkout(req, res) {
+async function createPaymentIntentHandler(req, res) {
   if (req.user.plan === 'premium') {
     throw new HttpError(409, 'Already premium', 'ALREADY_PREMIUM');
   }
-  const pricing = await Pricing.getActive();
-  if (!pricing) throw new HttpError(409, 'No active price configured', 'NO_ACTIVE_PRICE');
 
   const customer = await stripeService.ensureCustomer({ user: req.user });
-  const { url } = await stripeService.createCheckoutSession({
+  const { clientSecret, paymentIntentId } = await stripeService.createPaymentIntent({
+    amount: premium.amountCents,
+    currency: premium.currency,
     customer,
-    priceId: pricing.stripePriceId,
-    userId: req.user._id,
-    successUrl: env.STRIPE_SUCCESS_URL,
-    cancelUrl: env.STRIPE_CANCEL_URL,
+    metadata: {
+      userId: req.user._id.toString(),
+    },
   });
-  res.json({ url });
+
+  await PremiumPurchase.findOneAndUpdate(
+    { userId: req.user._id },
+    {
+      $set: {
+        userId: req.user._id,
+        stripeCustomerId: customer,
+        stripePaymentIntentId: paymentIntentId,
+        status: 'pending',
+        amountCents: premium.amountCents,
+        currency: premium.currency,
+        priceId: null,
+        paidAt: null,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  res.json({
+    clientSecret,
+    paymentIntentId,
+    amountCents: premium.amountCents,
+    currency: premium.currency,
+  });
 }
 
-async function webhook(req, res) {
-  const signature = req.headers['stripe-signature'] || '';
-  let event;
-  try {
-    event = stripeService.verifyWebhook(req.body, signature);
-  } catch {
-    throw new HttpError(400, 'Invalid signature', 'INVALID_SIGNATURE');
+async function confirmPayment(req, res) {
+  const { paymentIntentId } = req.body;
+
+  const purchase = await PremiumPurchase.findOne({ userId: req.user._id });
+  if (!purchase || purchase.stripePaymentIntentId !== paymentIntentId) {
+    throw new HttpError(404, 'Payment not found', 'PAYMENT_NOT_FOUND');
   }
 
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object;
-      const userId = session.client_reference_id;
-      const customer = session.customer;
-      const subscriptionId = session.subscription;
-      if (!userId || !customer || !subscriptionId) break;
-
-      const stripe = stripeService._stripeInstance;
-      const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      const priceId = sub.items?.data?.[0]?.price?.id || null;
-
-      await Subscription.findOneAndUpdate(
-        { userId },
-        {
-          $set: {
-            userId,
-            stripeCustomerId: customer,
-            stripeSubscriptionId: subscriptionId,
-            status: sub.status,
-            currentPeriodEnd: new Date(sub.current_period_end * 1000),
-            cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-            priceId,
-          },
-        },
-        { upsert: true, new: true }
-      );
-
-      await User.updateOne({ _id: userId }, { $set: { plan: 'premium' } });
-      break;
-    }
-
-    case 'customer.subscription.updated': {
-      const sub = event.data.object;
-      const record = await Subscription.findOneAndUpdate(
-        { stripeSubscriptionId: sub.id },
-        {
-          $set: {
-            status: sub.status,
-            currentPeriodEnd: new Date(sub.current_period_end * 1000),
-            cancelAtPeriodEnd: !!sub.cancel_at_period_end,
-          },
-        },
-        { new: true }
-      );
-      if (record) {
-        const nowPremium = ['active', 'trialing'].includes(sub.status);
-        await User.updateOne({ _id: record.userId }, { $set: { plan: nowPremium ? 'premium' : 'free' } });
-      }
-      break;
-    }
-
-    case 'customer.subscription.deleted': {
-      const sub = event.data.object;
-      const record = await Subscription.findOneAndUpdate(
-        { stripeSubscriptionId: sub.id },
-        { $set: { status: 'canceled' } },
-        { new: true }
-      );
-      if (record) {
-        await User.updateOne({ _id: record.userId }, { $set: { plan: 'free' } });
-      }
-      break;
-    }
-    default:
-      break;
+  if (purchase.status === 'paid' && req.user.plan === 'premium') {
+    return res.json({ success: true, user: req.user });
   }
 
-  res.json({ received: true });
+  const result = await stripeService.verifyPaymentIntent(paymentIntentId);
+
+  if (result.metadata.userId !== req.user._id.toString()) {
+    throw new HttpError(403, 'Payment does not belong to this user', 'PAYMENT_MISMATCH');
+  }
+
+  if (!result.verified) {
+    throw new HttpError(409, 'Payment not completed', 'PAYMENT_FAILED');
+  }
+
+  if (result.amount !== purchase.amountCents || result.currency !== purchase.currency) {
+    throw new HttpError(409, 'Payment amount mismatch', 'PAYMENT_MISMATCH');
+  }
+
+  purchase.status = 'paid';
+  purchase.paidAt = new Date();
+  await purchase.save();
+
+  req.user.plan = 'premium';
+  await req.user.save();
+
+  res.json({ success: true, user: req.user });
 }
 
-async function getSubscription(req, res) {
-  const subscription = await Subscription.findOne({ userId: req.user._id });
-  res.json({ subscription });
+async function getPurchase(req, res) {
+  const purchase = await PremiumPurchase.findOne({ userId: req.user._id });
+  res.json({ purchase });
 }
 
-async function portal(req, res) {
-  const sub = await Subscription.findOne({ userId: req.user._id });
-  if (!sub?.stripeCustomerId) throw new HttpError(409, 'No Stripe customer', 'NO_CUSTOMER');
-  const { url } = await stripeService.createPortalSession({
-    customer: sub.stripeCustomerId,
-    returnUrl: env.STRIPE_CANCEL_URL,
-  });
+async function receipt(req, res) {
+  const purchase = await PremiumPurchase.findOne({ userId: req.user._id, status: 'paid' });
+  if (!purchase?.stripePaymentIntentId) {
+    throw new HttpError(409, 'No payment found', 'NO_PAYMENT');
+  }
+  const url = await stripeService.getPaymentReceipt(purchase.stripePaymentIntentId);
+  if (!url) throw new HttpError(404, 'Receipt not available', 'NO_RECEIPT');
   res.json({ url });
 }
 
 async function simulateSuccess(req, res) {
-  // Temporary dev shortcut until Stripe checkout is integrated end-to-end.
+  if (env.NODE_ENV === 'production') {
+    throw new HttpError(404, 'Not found', 'NOT_FOUND');
+  }
   req.user.plan = 'premium';
   await req.user.save();
   res.json({ user: req.user, simulated: true });
 }
 
-module.exports = { checkout, webhook, getSubscription, portal, simulateSuccess };
+module.exports = {
+  createPaymentIntent: createPaymentIntentHandler,
+  confirmPayment,
+  getPurchase,
+  receipt,
+  simulateSuccess,
+};

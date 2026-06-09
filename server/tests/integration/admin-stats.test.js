@@ -3,7 +3,7 @@ const { getApp, request, createUser, authHeader } = require('../helpers');
 const Category = require('../../src/models/Category');
 const Puzzle = require('../../src/models/Puzzle');
 const GameSession = require('../../src/models/GameSession');
-const Subscription = require('../../src/models/Subscription');
+const PremiumPurchase = require('../../src/models/PremiumPurchase');
 
 registerHooks();
 const app = () => getApp();
@@ -20,9 +20,14 @@ describe('GET /admin/stats', () => {
     const p = await Puzzle.findOne({ plate: 'A' });
     await GameSession.create({ userId: u1._id, puzzleId: p._id, solved: true, completedAt: new Date() });
     await GameSession.create({ userId: u2._id, puzzleId: p._id });
-    await Subscription.create({
-      userId: u1._id, stripeCustomerId: 'c', stripeSubscriptionId: 's',
-      status: 'active', currentPeriodEnd: new Date(),
+    await PremiumPurchase.create({
+      userId: u1._id,
+      stripeCustomerId: 'c',
+      stripeCheckoutSessionId: 'cs_1',
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     });
 
     const res = await request(app()).get('/admin/stats').set(authHeader(await admin()));
@@ -33,7 +38,7 @@ describe('GET /admin/stats', () => {
     expect(res.body.puzzles.premium).toBe(1);
     expect(res.body.sessions.total).toBe(2);
     expect(res.body.sessions.solved).toBe(1);
-    expect(res.body.subscriptions.active).toBe(1);
+    expect(res.body.purchases.paid).toBe(1);
   });
 
   it('403 for non-admin', async () => {

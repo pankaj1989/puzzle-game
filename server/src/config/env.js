@@ -27,9 +27,8 @@ const schema = z.object({
   ]).default(false),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1),
-  STRIPE_SUCCESS_URL: z.url(),
-  STRIPE_CANCEL_URL: z.url(),
+  PREMIUM_AMOUNT_CENTS: z.coerce.number().int().positive().default(900),
+  PREMIUM_CURRENCY: z.string().length(3).default('usd').transform((s) => s.toLowerCase()),
   ADMIN_EMAILS: z.string().default('').transform(s =>
     s.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
   ),

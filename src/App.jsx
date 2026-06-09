@@ -14,8 +14,6 @@ import { DashboardPage } from './pages/admin/DashboardPage';
 import { CategoriesPage } from './pages/admin/CategoriesPage';
 import { PuzzlesPage } from './pages/admin/PuzzlesPage';
 import { UsersPage } from './pages/admin/UsersPage';
-import { PricingPage } from './pages/admin/PricingPage';
-
 export default function App() {
   return (
     <GoogleProvider>
@@ -62,7 +60,6 @@ export default function App() {
             <Route path="puzzles" element={<PuzzlesPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="users" element={<UsersPage />} />
-            <Route path="pricing" element={<PricingPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

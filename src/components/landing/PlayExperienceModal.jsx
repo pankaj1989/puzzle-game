@@ -8,11 +8,13 @@ import { displayForCategory } from "./categoryUiConfig.js";
 import { api } from "../../api/client";
 import { getUserFriendlyApiMessage } from "../../api/apiErrors";
 import { useAuth } from "../../auth/AuthContext";
+import { PREMIUM_PRICE_LABEL } from "../../config/premium";
 import { useModalStack } from "../../hooks/useModalStack";
 
 export function PlayExperienceModal({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { simulatePremiumUpgrade } = useAuth();
+  const { user, startPremiumCheckout, refreshUser } = useAuth();
+  const isPremium = user?.plan === "premium";
   const [showGameStart, setShowGameStart] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [isPremiumFlow, setIsPremiumFlow] = useState(false);
@@ -24,6 +26,12 @@ export function PlayExperienceModal({ isOpen, onClose }) {
   const [premiumPickerRandomFlow, setPremiumPickerRandomFlow] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Refresh plan from server when modal opens (fixes stale localStorage after payment)
+  useEffect(() => {
+    if (!isOpen) return;
+    refreshUser();
+  }, [isOpen, refreshUser]);
 
   // Reset state when modal is closed
   useEffect(() => {
@@ -115,16 +123,20 @@ export function PlayExperienceModal({ isOpen, onClose }) {
   async function openPremiumCategorySelection() {
     if (starting) return;
     setError(null);
-    setStarting(true);
-    try {
-      await simulatePremiumUpgrade();
+    if (!user) {
+      setError("Sign in to upgrade to Premium.");
+      return;
+    }
+    if (isPremium) {
       setIsPremiumFlow(true);
       setShowCategorySelection(true);
-    } catch (err) {
-      setError(getUserFriendlyApiMessage(err, "Could not upgrade account"));
-    } finally {
-      setStarting(false);
+      return;
     }
+    startPremiumCheckout(() => {
+      setIsPremiumFlow(true);
+      setShowCategorySelection(true);
+      setStarting(false);
+    });
   }
 
   if (showCategorySelection) {
@@ -333,7 +345,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
                     "rgb(254 154 0 / 37%) 0px 0px 0px, rgb(254 154 0 / 43%) 0px 20px 25px -5px",
                 }}
               >
-                <span>{starting ? "Upgrading..." : "$9/month"}</span>
+                <span>{isPremium ? "Choose Category" : PREMIUM_PRICE_LABEL}</span>
                 <img src="/arrow.svg" alt="Arrow" className="w-5 sm:w-auto" />
               </button>
             </div>
@@ -343,10 +355,11 @@ export function PlayExperienceModal({ isOpen, onClose }) {
             <p className="text-center text-red-600 text-sm mt-3">{error}</p>
           )}
 
-          {/* Footer note */}
-          <p className="text-center text-gray-500 text-[9px] sm:text-sm mt-2 sm:mt-6 px-2">
-            You can upgrade to Premium anytime from your account
-          </p>
+          {!isPremium && (
+            <p className="text-center text-gray-500 text-[9px] sm:text-sm mt-2 sm:mt-6 px-2">
+              You can upgrade to Premium anytime from your account
+            </p>
+          )}
         </div>
       </div>
     </>

@@ -10,7 +10,6 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const profileRoutes = require('./routes/profile');
 const sessionRoutes = require('./routes/sessions');
-const pricingRoutes = require('./routes/pricing');
 const billingRoutes = require('./routes/billing');
 const adminCategoryRoutes = require('./routes/adminCategories');
 const adminPuzzleRoutes = require('./routes/adminPuzzles');
@@ -33,7 +32,6 @@ function createApp() {
 
   app.use(helmet());
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
-  app.use('/billing/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
   app.use(generalLimiter);
@@ -43,7 +41,6 @@ function createApp() {
   app.use('/sessions', sessionRoutes);
   app.use('/auth', authRoutes);
   app.use('/profile', profileRoutes);
-  app.use('/', pricingRoutes);
   app.use('/billing', billingRoutes);
   app.use('/admin/categories', adminCategoryRoutes);
   app.use('/admin/puzzles', adminPuzzleRoutes);

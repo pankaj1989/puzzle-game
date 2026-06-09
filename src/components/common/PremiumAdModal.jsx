@@ -1,28 +1,24 @@
-import { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { FaCrown } from 'react-icons/fa';
 import { useAuth } from '../../auth/AuthContext';
-import { getUserFriendlyApiMessage } from '../../api/apiErrors';
 import { useModalStack } from '../../hooks/useModalStack';
 
 export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
-  const { simulatePremiumUpgrade } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { user, openPremiumPayment } = useAuth();
+  useModalStack(isOpen);
 
-  async function handleUpgrade() {
-    setError(null);
-    setLoading(true);
-    try {
-      await simulatePremiumUpgrade();
+  function handleUpgrade() {
+    if (!user) return;
+    if (user.plan === 'premium') {
       onUpgrade?.();
       onClose?.();
-    } catch (err) {
-      setError(getUserFriendlyApiMessage(err, 'Could not start checkout'));
-      setLoading(false);
+      return;
     }
+    openPremiumPayment(() => {
+      onUpgrade?.();
+      onClose?.();
+    });
   }
-  useModalStack(isOpen);
 
   if (!isOpen) return null;
 
@@ -56,7 +52,7 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute right-0 z-99 size-15 rounded-full bg-[rgb(38, 77, 167)] bg-[#264DA7] text-white flex items-center justify-center transition-colors shadow-lg border-[black] border-[1px]"
+              className="absolute right-0 z-99 size-15 rounded-full bg-[rgb(38, 77, 167)] bg-[#264DA7] text-white flex items-center justify-center transition-colors shadow-lg border-[black] border"
             >
               <IoClose className="size-6" />
             </button>
@@ -103,9 +99,8 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
                 {/* Buttons in the dark section */}
                 <div className="space-y-3 mb-8">
                   <button
-                    onClick={onUpgrade || handleUpgrade}
-                    disabled={loading}
-                    className="w-full py-4 rounded-full font-bold text-white text-lg transition-all hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
+                    onClick={handleUpgrade}
+                    className="w-full py-4 rounded-full font-bold text-white text-lg transition-all hover:scale-105"
                     style={{
                       background: '#FA7A00',
                       border: '1px solid #FFFFFF',
@@ -114,20 +109,13 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
                   >
                     <div className="flex items-center justify-center gap-2">
                       <FaCrown className="text-white text-xl" />
-                      <span>{loading ? 'Redirecting…' : 'Upgrade to Premium'}</span>
+                      <span>Upgrade to Premium</span>
                     </div>
                   </button>
 
-                  {error && (
-                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 text-center">
-                      {error}
-                    </div>
-                  )}
-
                   <button
                     onClick={onClose}
-                    disabled={loading}
-                    className="w-full py-4 rounded-full font-bold text-gray-900 bg-white text-lg transition-all hover:bg-gray-50 disabled:opacity-60"
+                    className="w-full py-4 rounded-full font-bold text-gray-900 bg-white text-lg transition-all hover:bg-gray-50"
                     style={{
                       border: '1px solid #FA7A00',
                       boxShadow: '0 4px 0 0 #FA7A00'
@@ -140,101 +128,6 @@ export function PremiumAdModal({ isOpen, onClose, onUpgrade }) {
             </div>
           </div>
         </div>
-
-        {/* Revealed Letters Section */}
-        {/* <div 
-          className="w-full px-4"
-          style={{background: "linear-gradient(350deg, #FFFBF5 0%, #FFF5E9 30%, #FFE8D6 60%, #FFD4B8 100%)"}}
-        >
-          <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-2xl" style={{ background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #1E3A8A 100%)' }}>
-           
-            <div className="pt-6 pb-4 text-center">
-              <p className="text-white text-[11px] font-semibold uppercase tracking-[0.2em]" style={{letterSpacing:"3.3px"}}>
-                Revealed Letters
-              </p>
-            </div>
-
-         
-            <div className="px-[50px] py-[10px] flex justify-between">
-              <div className="flex flex-wrap justify-center gap-3">
-                {['B', 'E', 'A', 'T', 'L', 'E', 'S'].map((letter, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={letter}
-                    readOnly
-                    className="w-14 h-14 rounded-xl text-center outline-none cursor-default"
-                    style={{
-                      background: 'linear-gradient(180deg, #6B9BD6 0%, #5A8BC7 50%, #4A7BB8 100%)',
-                      border: '2px solid #FFFFFF4D',
-                      boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.4), inset 0px -1px 0px 0px rgba(255, 255, 255, 0.2)',
-                      color: '#FFFFFF',
-                      fontWeight: 'bold',
-                      fontSize: '24px'
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="flex flex-wrap justify-center gap-3">
-                {['M', 'A', 'N', 'I'].map((letter, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={letter}
-                    readOnly
-                    className="w-14 h-14 rounded-xl text-center outline-none cursor-default"
-                    style={{
-                      background: 'linear-gradient(180deg, #6B9BD6 0%, #5A8BC7 50%, #4A7BB8 100%)',
-                      border: '2px solid #FFFFFF4D',
-                      boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.4), inset 0px -1px 0px 0px rgba(255, 255, 255, 0.2)',
-                      color: '#FFFFFF',
-                      fontWeight: 'bold',
-                      fontSize: '24px'
-                    }}
-                  />
-                ))}
-              </div>
-           
-            </div>
-                <div className="flex justify-center mb-5">
-                <input
-                  type="text"
-                  value="A"
-                  readOnly
-                  className="w-14 h-14 rounded-xl text-center outline-none cursor-default"
-                  style={{
-                    background: 'linear-gradient(180deg, #6B9BD6 0%, #5A8BC7 50%, #4A7BB8 100%)',
-                    border: '2px solid #FFFFFF4D',
-                    boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.4), inset 0px -1px 0px 0px rgba(255, 255, 255, 0.2)',
-                    color: '#FFFFFF',
-                    fontWeight: 'bold',
-                    fontSize: '24px'
-                  }}
-                />
-              </div>
-          </div>
-
-        
-          <div className="max-w-4xl mx-auto mt-6 px-4">
-            <input
-              type="text"
-              placeholder="Type your answer..."
-              className="w-full px-6 py-4 rounded-2xl border-none focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-700 text-base shadow-lg bg-white"
-            />
-            
-        
-            <div className="flex justify-center mt-6 mb-6">
-              <button
-                className="px-10 py-2.5 rounded-full font-bold text-white text-base transition-all hover:scale-105 shadow-lg"
-                style={{
-                  background: 'linear-gradient(90deg, #9810FA 0%, #155DFC 100%)'
-                }}
-              >
-                Submit Answer
-              </button>
-            </div>
-          </div>
-        </div> */}
       </div>
     </div>
   );

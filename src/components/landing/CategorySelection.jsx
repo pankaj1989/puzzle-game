@@ -24,7 +24,10 @@ function CategoryHeroArt({ category }) {
   if (!category.image || imgFailed) {
     return (
       <div className="flex h-full min-h-[200px] w-full items-center justify-center relative z-10">
-        <IoIosShuffle className="size-[88px] text-white/90 drop-shadow-lg" aria-hidden />
+        <IoIosShuffle
+          className="size-[88px] text-white/90 drop-shadow-lg"
+          aria-hidden
+        />
       </div>
     );
   }
@@ -39,7 +42,12 @@ function CategoryHeroArt({ category }) {
   );
 }
 
-export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectCategory }) {
+export function CategorySelection({
+  isOpen,
+  onClose: _onClose,
+  onBack,
+  onSelectCategory,
+}) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -55,7 +63,8 @@ export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectC
         if (!active) return;
         setCategories(data.categories || []);
       } catch (err) {
-        if (active) setError(getUserFriendlyApiMessage(err, "Could not load categories"));
+        if (active)
+          setError(getUserFriendlyApiMessage(err, "Could not load categories"));
       } finally {
         if (active) setLoading(false);
       }
@@ -100,7 +109,8 @@ export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectC
       <div
         className="fixed inset-0 z-modal-backdrop"
         style={{
-          background: "linear-gradient(165deg, #fffdfb 0%, #fff5eb 45%, #ffe8d6 100%)",
+          background:
+            "linear-gradient(165deg, #fffdfb 0%, #fff5eb 45%, #ffe8d6 100%)",
         }}
       />
 
@@ -142,11 +152,17 @@ export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectC
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14 xl:grid-cols-3">
             {loading && (
-              <p className="col-span-full py-12 text-center text-text-muted">Loading categories…</p>
+              <p className="col-span-full py-12 text-center text-text-muted">
+                Loading categories…
+              </p>
             )}
-            {error && <p className="col-span-full py-12 text-center text-red-600">{error}</p>}
+            {error && (
+              <p className="col-span-full py-12 text-center text-red-600">
+                {error}
+              </p>
+            )}
             {!loading &&
               !error &&
               viewCategories.map((category) => (
@@ -161,52 +177,70 @@ export function CategorySelection({ isOpen, onClose: _onClose, onBack, onSelectC
                       description: category.description,
                     })
                   }
-                  className="group w-full text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+                  className="group w-full text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 relative h-[320px] flex flex-col justify-end"
                 >
-                  <div className="overflow-hidden rounded-[28px] border border-gray-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.1)] transition-shadow duration-200 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]">
-                    <div
-                      className="relative flex min-h-[220px] items-end justify-center overflow-hidden px-2 pt-6 pb-2 sm:min-h-[240px] sm:px-4"
-                      style={{ background: category.bgColor }}
-                    >
-                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                        <span
-                          className="select-none text-center font-black uppercase leading-none text-white/[0.09]"
-                          style={{
-                            fontFamily: "Inter, system-ui, sans-serif",
-                            fontSize:
-                              category.watermarkText.length > 9
-                                ? "clamp(36px, 10vw, 56px)"
-                                : category.watermarkText.length > 6
-                                  ? "clamp(44px, 11vw, 72px)"
-                                  : "clamp(52px, 13vw, 88px)",
-                          }}
-                        >
-                          {category.watermarkText}
-                        </span>
-                      </div>
-                      <CategoryHeroArt category={category} />
-                    </div>
+                  <div className="absolute top-0 w-full flex justify-center ">
+                    <CategoryHeroArt category={category} />
+                  </div>
 
-                    <div
-                      className="border-t border-white/10 px-5 py-5 text-white"
+                  <div
+                    className="overflow-hidden rounded-t-[28px]  bg-white shadow-[0_12px_40px_rgba(15,23,42,0.1)] transition-shadow duration-200 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]  min-h-[200px] -z-10 absolute bottom-22 w-full"
+                    style={{ background: category.bgColor }}
+                  />
+                  {/* <div
+                    className="overflow-hidden rounded-[28px] border border-gray-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.1)] transition-shadow duration-200 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)] "
+                    style={{ background: category.bgColor }}
+                  > */}
+                  <div
+                    className="relative flex min-h-[220px]  justify-center px-2 pt-10 pb-2 sm:min-h-[180px] sm:px-4"
+                    // style={{ background: category.bgColor }}
+                  >
+                    {/* <div className="pointer-events-none absolute inset-0 flex items-center justify-center"> */}
+                    <span
+                      className="pointer-events-none select-none text-center font-black uppercase leading-none text-white/[0.09]"
                       style={{
-                        background: "radial-gradient(120% 120% at 50% 0%, #1a1a1f 0%, #0a0a0c 55%, #000 100%)",
+                        fontFamily: "Inter, system-ui, sans-serif",
+                        fontSize:
+                          category.watermarkText.length > 9
+                            ? "clamp(36px, 9vw, 48px)"
+                            : category.watermarkText.length > 6
+                              ? "clamp(44px, 11vw, 72px)"
+                              : "clamp(52px, 13vw, 76px)",
                       }}
                     >
-                      <h3 className="font-sans text-[1.35rem] font-bold leading-snug tracking-tight sm:text-[1.5rem]">
+                      {category.watermarkText}
+                    </span>
+                    {/* </div> */}
+                  </div>
+
+                  <div
+                    className="border-t border-white/10 px-4 py-1 text-white text-center rounded-[28px] z-100"
+                    style={{
+                      background:
+                        "radial-gradient(120% 120% at 50% 0%, #1a1a1f 0%, #0a0a0c 55%, #000 100%)",
+                    }}
+                  >
+                    <div className="text-center pt-3">
+                      <h3 className="font-sans text-[1.35rem] font-bold leading-snug tracking-tight sm:text-[1.8rem]">
                         {category.catname}
                       </h3>
-                      <p className="mt-2 text-[13px] leading-relaxed text-white/75 sm:text-[14px]">
+                      <p className="text-[13px] leading-relaxed text-white/75 sm:text-[14px]">
                         {category.description}
                       </p>
-                      <div className="mt-4 flex items-center justify-between border-t border-white/15 pt-4">
-                        <span className="text-[12px] font-medium text-white/45">Tap to play</span>
-                        <span className="flex size-8 items-center justify-center rounded-full border border-white/35 bg-white/5 transition-colors group-hover:border-white/60 group-hover:bg-white/10">
-                          <IoArrowForward className="size-4 text-white" aria-hidden />
-                        </span>
-                      </div>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between border-t border-white/50 pt-2 pb-1">
+                      <span className="text-[12px] font-medium text-white">
+                        Tap to play
+                      </span>
+                      <span className="flex size-6 items-center justify-center rounded-full border border-white/35 bg-white/5 transition-colors group-hover:border-white/60 group-hover:bg-white/10">
+                        <IoArrowForward
+                          className="size-4 text-white"
+                          aria-hidden
+                        />
+                      </span>
                     </div>
                   </div>
+                  {/* </div> */}
                 </button>
               ))}
           </div>

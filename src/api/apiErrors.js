@@ -1,4 +1,10 @@
 const MESSAGES = {
+  ALREADY_PREMIUM: 'You already have Premium.',
+  NO_PAYMENT: 'No premium purchase found on this account.',
+  NO_RECEIPT: 'Receipt is not available yet. Try again in a moment.',
+  PAYMENT_NOT_FOUND: 'We could not find that payment. Please try upgrading again.',
+  PAYMENT_FAILED: 'Payment was not completed. Check your card details and try again.',
+  PAYMENT_MISMATCH: 'Payment verification failed. Please contact support if you were charged.',
   PLAN_REQUIRED: 'Premium is required to play from that category. Upgrade or pick a free random game.',
   NO_PUZZLE_IN_CATEGORY: 'No puzzle is available in that category right now. Try another category.',
   CATEGORY_NOT_FOUND: 'That category was not found. Refresh the list and try again.',

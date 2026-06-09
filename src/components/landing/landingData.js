@@ -1,3 +1,5 @@
+import { PREMIUM_PRICE_USD } from "../../config/premium.js";
+
 export const BRAND = {
   name: "Puzzle Game",
   subtitle: "Premium Puzzles",
@@ -138,8 +140,8 @@ export const PRICING = {
   premium: {
     tier: "Premium",
     badge: "Popular",
-    price: 9,
-    period: "month",
+    price: PREMIUM_PRICE_USD,
+    periodLabel: "one-time",
     description: "For dedicated puzzlers who want the ultimate experience",
     cta: { href: "#hero", label: "Upgrade to Premium" },
     features: [

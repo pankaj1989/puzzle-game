@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
+import { PremiumPaymentModal } from '../components/common/PremiumPaymentModal';
 import { tokenStorage, userStorage } from './storage';
 
 const AuthContext = createContext(null);
@@ -7,6 +8,8 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStorage.get());
   const [loading, setLoading] = useState(true);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const paymentSuccessRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -44,7 +47,6 @@ export function AuthProvider({ children }) {
 
   const signup = useCallback(
     async (payload) => {
-      // payload: { email, password, firstName?, lastName?, displayName? }
       const data = await api.post('/auth/signup', payload, { skipAuth: true });
       completeAuth(data);
       return data.user;
@@ -90,18 +92,41 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const simulatePremiumUpgrade = useCallback(async () => {
-    const data = await api.post('/billing/simulate-success', {});
-    if (data?.user) {
-      userStorage.set(data.user);
-      setUser(data.user);
-      return data.user;
-    }
-    const fresh = await api.get('/auth/me');
-    userStorage.set(fresh.user);
-    setUser(fresh.user);
-    return fresh.user;
+  const closePremiumPayment = useCallback(() => {
+    setPaymentModalOpen(false);
+    paymentSuccessRef.current = null;
   }, []);
+
+  const openPremiumPayment = useCallback((onSuccess) => {
+    paymentSuccessRef.current = typeof onSuccess === 'function' ? onSuccess : null;
+    setPaymentModalOpen(true);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (!tokenStorage.getAccess()) return null;
+    try {
+      const { user: fresh } = await api.get('/auth/me');
+      userStorage.set(fresh);
+      setUser(fresh);
+      return fresh;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handlePaymentSuccess = useCallback(async () => {
+    await refreshUser();
+    const cb = paymentSuccessRef.current;
+    cb?.();
+    closePremiumPayment();
+  }, [closePremiumPayment, refreshUser]);
+
+  const startPremiumCheckout = useCallback(
+    (onSuccess) => {
+      openPremiumPayment(onSuccess);
+    },
+    [openPremiumPayment]
+  );
 
   const value = {
     user,
@@ -111,9 +136,21 @@ export function AuthProvider({ children }) {
     verifyMagicLink,
     loginWithGoogle,
     logout,
-    simulatePremiumUpgrade,
+    openPremiumPayment,
+    startPremiumCheckout,
+    refreshUser,
   };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <PremiumPaymentModal
+        isOpen={paymentModalOpen}
+        onClose={closePremiumPayment}
+        onSuccess={handlePaymentSuccess}
+      />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

@@ -3,55 +3,68 @@ const stripeService = require('../../src/services/stripeService');
 
 const { registerHooks } = require('../testSetup');
 const { getApp, request, createUser, authHeader } = require('../helpers');
-const Subscription = require('../../src/models/Subscription');
+const PremiumPurchase = require('../../src/models/PremiumPurchase');
 
 registerHooks();
 const app = () => getApp();
 
-describe('GET /billing/subscription', () => {
-  it('null when no subscription', async () => {
+describe('GET /billing/purchase', () => {
+  it('null when no purchase', async () => {
     const user = await createUser();
-    const res = await request(app()).get('/billing/subscription').set(authHeader(user));
+    const res = await request(app()).get('/billing/purchase').set(authHeader(user));
     expect(res.status).toBe(200);
-    expect(res.body.subscription).toBeNull();
+    expect(res.body.purchase).toBeNull();
   });
 
-  it('returns the user subscription', async () => {
+  it('returns the user purchase', async () => {
     const user = await createUser();
-    await Subscription.create({
-      userId: user._id, stripeCustomerId: 'cus_1', stripeSubscriptionId: 'sub_1',
-      status: 'active', currentPeriodEnd: new Date(Date.now() + 86400_000),
+    await PremiumPurchase.create({
+      userId: user._id,
+      stripeCustomerId: 'cus_1',
+      stripeCheckoutSessionId: 'cs_1',
+      stripePaymentIntentId: 'pi_1',
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     });
-    const res = await request(app()).get('/billing/subscription').set(authHeader(user));
-    expect(res.body.subscription.status).toBe('active');
+    const res = await request(app()).get('/billing/purchase').set(authHeader(user));
+    expect(res.body.purchase.status).toBe('paid');
   });
 
   it('401 without auth', async () => {
-    const res = await request(app()).get('/billing/subscription');
+    const res = await request(app()).get('/billing/purchase');
     expect(res.status).toBe(401);
   });
 });
 
-describe('POST /billing/portal', () => {
+describe('POST /billing/receipt', () => {
   beforeEach(() => {
-    stripeService.createPortalSession.mockResolvedValue({ url: 'https://portal' });
+    stripeService.getPaymentReceiptUrl.mockResolvedValue('https://receipt');
   });
 
-  it('409 when user has no Stripe customer yet', async () => {
+  it('409 when user has no payment yet', async () => {
     const user = await createUser();
-    const res = await request(app()).post('/billing/portal').set(authHeader(user)).send({});
+    const res = await request(app()).post('/billing/receipt').set(authHeader(user)).send({});
     expect(res.status).toBe(409);
-    expect(res.body.error.code).toBe('NO_CUSTOMER');
+    expect(res.body.error.code).toBe('NO_PAYMENT');
   });
 
-  it('returns portal url when customer exists', async () => {
+  it('returns receipt url when payment exists', async () => {
     const user = await createUser();
-    await Subscription.create({
-      userId: user._id, stripeCustomerId: 'cus_1', stripeSubscriptionId: 'sub_1',
-      status: 'active', currentPeriodEnd: new Date(),
+    await PremiumPurchase.create({
+      userId: user._id,
+      stripeCustomerId: 'cus_1',
+      stripeCheckoutSessionId: 'cs_1',
+      stripePaymentIntentId: 'pi_1',
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     });
-    const res = await request(app()).post('/billing/portal').set(authHeader(user)).send({});
+    const res = await request(app()).post('/billing/receipt').set(authHeader(user)).send({});
     expect(res.status).toBe(200);
-    expect(res.body.url).toBe('https://portal');
+    expect(res.body.url).toBe('https://receipt');
+    expect(stripeService.getPaymentReceiptUrl).toHaveBeenCalledWith('pi_1');
   });
 });

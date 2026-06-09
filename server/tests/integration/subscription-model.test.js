@@ -1,40 +1,58 @@
 const { registerHooks } = require('../testSetup');
 const mongoose = require('mongoose');
-const Subscription = require('../../src/models/Subscription');
+const PremiumPurchase = require('../../src/models/PremiumPurchase');
 
 registerHooks();
 
-describe('Subscription model', () => {
+describe('PremiumPurchase model', () => {
   beforeAll(async () => {
-    await Subscription.init();
+    await PremiumPurchase.init();
   });
 
   it('creates with required fields', async () => {
-    const s = await Subscription.create({
+    const p = await PremiumPurchase.create({
       userId: new mongoose.Types.ObjectId(),
       stripeCustomerId: 'cus_123',
-      stripeSubscriptionId: 'sub_123',
-      status: 'active',
-      currentPeriodEnd: new Date(),
+      stripeCheckoutSessionId: 'cs_123',
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     });
-    expect(s.status).toBe('active');
+    expect(p.status).toBe('paid');
   });
 
-  it('enforces unique stripeSubscriptionId', async () => {
-    const shared = {
+  it('creates without checkout session id for payment-intent flow', async () => {
+    const p = await PremiumPurchase.create({
       userId: new mongoose.Types.ObjectId(),
+      stripeCustomerId: 'cus_pi',
+      stripePaymentIntentId: 'pi_123',
+      status: 'pending',
+      amountCents: 900,
+      currency: 'usd',
+    });
+    expect(p.stripeCheckoutSessionId).toBeNull();
+    expect(p.status).toBe('pending');
+  });
+
+  it('enforces unique stripeCheckoutSessionId', async () => {
+    const shared = {
       stripeCustomerId: 'cus_1',
-      status: 'active',
-      currentPeriodEnd: new Date(),
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     };
-    await Subscription.create({ ...shared, stripeSubscriptionId: 'sub_X' });
+    await PremiumPurchase.create({
+      ...shared,
+      userId: new mongoose.Types.ObjectId(),
+      stripeCheckoutSessionId: 'cs_X',
+    });
     await expect(
-      Subscription.create({
+      PremiumPurchase.create({
+        ...shared,
         userId: new mongoose.Types.ObjectId(),
-        stripeCustomerId: 'cus_1',
-        status: 'active',
-        currentPeriodEnd: new Date(),
-        stripeSubscriptionId: 'sub_X',
+        stripeCheckoutSessionId: 'cs_X',
       })
     ).rejects.toThrow();
   });

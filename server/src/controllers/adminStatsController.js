@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Puzzle = require('../models/Puzzle');
 const GameSession = require('../models/GameSession');
-const Subscription = require('../models/Subscription');
+const PremiumPurchase = require('../models/PremiumPurchase');
 
 async function stats(req, res) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -9,7 +9,7 @@ async function stats(req, res) {
     usersTotal, usersPremium,
     puzzlesTotal, puzzlesPremium,
     sessionsTotal, sessionsSolved, sessionsLast7,
-    subsActive, subsCanceled,
+    purchasesPaid,
   ] = await Promise.all([
     User.countDocuments({}),
     User.countDocuments({ plan: 'premium' }),
@@ -18,14 +18,13 @@ async function stats(req, res) {
     GameSession.countDocuments({}),
     GameSession.countDocuments({ solved: true }),
     GameSession.countDocuments({ startedAt: { $gte: sevenDaysAgo } }),
-    Subscription.countDocuments({ status: { $in: ['active', 'trialing'] } }),
-    Subscription.countDocuments({ status: 'canceled' }),
+    PremiumPurchase.countDocuments({ status: 'paid' }),
   ]);
   res.json({
     users: { total: usersTotal, premium: usersPremium },
     puzzles: { total: puzzlesTotal, premium: puzzlesPremium },
     sessions: { total: sessionsTotal, solved: sessionsSolved, last7Days: sessionsLast7 },
-    subscriptions: { active: subsActive, canceled: subsCanceled },
+    purchases: { paid: purchasesPaid },
   });
 }
 

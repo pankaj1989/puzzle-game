@@ -74,7 +74,7 @@ export function LandingPricing({ onStartPlaying }) {
               ${PRICING.premium.price}
             </span>
             <span className="ml-2 text-[18px] text-text-muted2">
-              /{PRICING.premium.period}
+              {PRICING.premium.periodLabel}
             </span>
           </p>
           <p className="mt-6.5 text-base font-light! text-card-gray2 tracking-[0.2px] max-w-[20rem] leading-relaxed">

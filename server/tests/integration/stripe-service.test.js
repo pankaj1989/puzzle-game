@@ -1,9 +1,7 @@
 jest.mock('stripe', () => {
   const instance = {
-    checkout: { sessions: { create: jest.fn() } },
-    billingPortal: { sessions: { create: jest.fn() } },
+    paymentIntents: { create: jest.fn(), retrieve: jest.fn() },
     customers: { create: jest.fn() },
-    webhooks: { constructEvent: jest.fn() },
   };
   const factory = jest.fn(() => instance);
   factory._instance = instance;
@@ -13,7 +11,7 @@ jest.mock('stripe', () => {
 const { registerHooks } = require('../testSetup');
 const mongoose = require('mongoose');
 const stripeSdk = require('stripe');
-const Subscription = require('../../src/models/Subscription');
+const PremiumPurchase = require('../../src/models/PremiumPurchase');
 
 registerHooks();
 
@@ -26,58 +24,75 @@ describe('stripeService', () => {
   });
 
   beforeEach(() => {
-    sdkInstance.checkout.sessions.create.mockReset();
-    sdkInstance.billingPortal.sessions.create.mockReset();
+    sdkInstance.paymentIntents.create.mockReset();
+    sdkInstance.paymentIntents.retrieve.mockReset();
     sdkInstance.customers.create.mockReset();
-    sdkInstance.webhooks.constructEvent.mockReset();
   });
 
-  it('creates a checkout session with expected params', async () => {
-    sdkInstance.checkout.sessions.create.mockResolvedValue({ url: 'https://checkout', id: 'cs_1' });
-    const out = await svc.createCheckoutSession({
-      customer: 'cus_1', priceId: 'price_1', userId: 'u1',
-      successUrl: 'http://s', cancelUrl: 'http://c',
+  it('creates a payment intent with expected params', async () => {
+    sdkInstance.paymentIntents.create.mockResolvedValue({
+      id: 'pi_1',
+      client_secret: 'pi_secret',
     });
-    expect(sdkInstance.checkout.sessions.create).toHaveBeenCalledWith(expect.objectContaining({
-      mode: 'subscription',
+    const out = await svc.createPaymentIntent({
+      amount: 900,
+      currency: 'usd',
       customer: 'cus_1',
-      line_items: [{ price: 'price_1', quantity: 1 }],
-      success_url: 'http://s',
-      cancel_url: 'http://c',
-      client_reference_id: 'u1',
+      metadata: { userId: 'u1', priceId: 'price_1' },
+    });
+    expect(sdkInstance.paymentIntents.create).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 900,
+      currency: 'usd',
+      customer: 'cus_1',
+      metadata: { userId: 'u1', priceId: 'price_1' },
+      automatic_payment_methods: { enabled: true },
     }));
-    expect(out).toEqual({ url: 'https://checkout', sessionId: 'cs_1' });
+    expect(out).toEqual({ clientSecret: 'pi_secret', paymentIntentId: 'pi_1' });
   });
 
-  it('creates portal session', async () => {
-    sdkInstance.billingPortal.sessions.create.mockResolvedValue({ url: 'https://portal' });
-    const out = await svc.createPortalSession({ customer: 'cus_1', returnUrl: 'http://r' });
-    expect(out).toEqual({ url: 'https://portal' });
-    expect(sdkInstance.billingPortal.sessions.create).toHaveBeenCalledWith({
-      customer: 'cus_1',
-      return_url: 'http://r',
+  it('verifies a succeeded payment intent', async () => {
+    sdkInstance.paymentIntents.retrieve.mockResolvedValue({
+      status: 'succeeded',
+      amount: 900,
+      currency: 'usd',
+      metadata: { userId: 'u1' },
+    });
+    const result = await svc.verifyPaymentIntent('pi_1');
+    expect(result.verified).toBe(true);
+    expect(result.status).toBe('succeeded');
+    expect(result.amount).toBe(900);
+    expect(result.currency).toBe('usd');
+    expect(result.metadata).toEqual({ userId: 'u1' });
+  });
+
+  it('returns payment receipt url', async () => {
+    sdkInstance.paymentIntents.retrieve.mockResolvedValue({
+      latest_charge: { receipt_url: 'https://receipt' },
+    });
+    const url = await svc.getPaymentReceipt('pi_1');
+    expect(url).toBe('https://receipt');
+    expect(sdkInstance.paymentIntents.retrieve).toHaveBeenCalledWith('pi_1', {
+      expand: ['latest_charge'],
     });
   });
 
-  it('verifies webhook passes raw body and signature', () => {
-    sdkInstance.webhooks.constructEvent.mockReturnValue({ type: 'x' });
-    const ev = svc.verifyWebhook(Buffer.from('{}'), 'sig123');
-    expect(sdkInstance.webhooks.constructEvent).toHaveBeenCalledWith(Buffer.from('{}'), 'sig123', expect.any(String));
-    expect(ev).toEqual({ type: 'x' });
-  });
-
-  it('ensureCustomer reuses existing sub customer id', async () => {
+  it('ensureCustomer reuses existing purchase customer id', async () => {
     const userId = new mongoose.Types.ObjectId();
-    await Subscription.create({
-      userId, stripeCustomerId: 'cus_existing', stripeSubscriptionId: 'sub_X',
-      status: 'active', currentPeriodEnd: new Date(),
+    await PremiumPurchase.create({
+      userId,
+      stripeCustomerId: 'cus_existing',
+      stripeCheckoutSessionId: 'cs_X',
+      status: 'paid',
+      amountCents: 900,
+      currency: 'usd',
+      paidAt: new Date(),
     });
     const cid = await svc.ensureCustomer({ user: { _id: userId, email: 'x@y.com' } });
     expect(cid).toBe('cus_existing');
     expect(sdkInstance.customers.create).not.toHaveBeenCalled();
   });
 
-  it('ensureCustomer creates one if no sub exists', async () => {
+  it('ensureCustomer creates one if no purchase exists', async () => {
     sdkInstance.customers.create.mockResolvedValue({ id: 'cus_new' });
     const userId = new mongoose.Types.ObjectId();
     const cid = await svc.ensureCustomer({ user: { _id: userId, email: 'x@y.com' } });

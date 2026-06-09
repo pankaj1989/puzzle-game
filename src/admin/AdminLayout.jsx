@@ -6,7 +6,6 @@ const nav = [
   { to: '/admin/puzzles', label: 'Puzzles' },
   { to: '/admin/categories', label: 'Categories' },
   { to: '/admin/users', label: 'Users' },
-  { to: '/admin/pricing', label: 'Pricing' },
 ];
 
 export default function AdminLayout() {

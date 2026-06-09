@@ -26,7 +26,7 @@ export function DashboardPage() {
         <Stat label="Sessions total" value={stats.sessions.total} />
         <Stat label="Solved" value={stats.sessions.solved} />
         <Stat label="Sessions (7d)" value={stats.sessions.last7Days} />
-        <Stat label="Active subs" value={stats.subscriptions.active} />
+        <Stat label="Premium purchases" value={stats.purchases.paid} />
       </div>
     </div>
   );
