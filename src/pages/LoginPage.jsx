@@ -124,7 +124,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
           </div>
         )}
 
-        {googleClientId ? (
+        {/* {googleClientId ? (
           <div className="mt-4 flex justify-center">
             <GoogleSignInButton onError={setError} redirectTo={redirectTo} />
           </div>
@@ -132,7 +132,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
           <p className="text-xs text-text-muted2 mt-4 text-center">
             Set <code>VITE_GOOGLE_CLIENT_ID</code> in <code>.env.local</code> to enable Google Sign-In.
           </p>
-        )}
+        )} */}
 
       <p className="text-sm text-text-muted mt-6 text-center">
         New here?{' '}
