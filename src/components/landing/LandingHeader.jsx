@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import { IoArrowForwardOutline } from "react-icons/io5";
 import { BRAND, HEADER_CTA, NAV_LINKS } from "./landingData.js";
 import { useAuth } from "../../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function LandingHeader({ onOpenLogin, onStartPlaying }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+
+  const navigate = useNavigate();
+
+  console.log("user",user)
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -15,6 +20,14 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
+
+
+
+  useEffect(()=>{
+    if(user?.role=="admin"){
+     navigate('/admin')
+    }
+  },[user])
 
   return (
     <header className="bg-[#FFFBF5]/70 border-b border-gray-200">

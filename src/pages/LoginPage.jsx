@@ -6,7 +6,7 @@ import GoogleSignInButton from '../auth/GoogleSignInButton';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
-  const { login } = useAuth();
+  const { login,user } = useAuth();
   const navigate = useNavigate();
   const redirectTo = '/';
 
@@ -105,12 +105,12 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
           <div className="flex-1 h-px bg-card-gray2" />
         </div>
 
-        <button
+        {/* <button
           type="button" onClick={onRequestMagic}
           className="w-full py-3 rounded-lg border-2 border-navy text-navy font-semibold bg-white hover:bg-cream"
         >
           Email me a sign-in link
-        </button>
+        </button> */}
 
         {magicRequested && (
           <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mt-3">
