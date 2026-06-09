@@ -1,29 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
-import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
-import { useModalStack } from '../hooks/useModalStack';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const redirectTo = '/';
 
-  useModalStack(isModal);
-
-  useEffect(() => {
-    if (!isModal) return undefined;
-    function onKey(e) {
-      if (e.key === 'Escape') onClose?.();
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isModal, onClose]);
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +27,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(getUserFriendlyApiMessage(err, 'Login failed'));
+      setError(err.message || 'Login failed');
     } finally {
       setSubmitting(false);
     }
@@ -55,7 +44,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
       setMagicRequested(true);
       if (res?.devMagicLinkUrl) setDevLink(res.devMagicLinkUrl);
     } catch (err) {
-      setError(getUserFriendlyApiMessage(err, 'Could not send magic link'));
+      setError(err.message || 'Could not send magic link');
     }
   }
 
@@ -81,11 +70,21 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
         />
 
         <label className="block text-sm font-medium text-navy mb-1" htmlFor="password">Password</label>
-        <input
-          id="password" type="password" required
-          value={password} onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 border border-card-gray2 rounded-lg mb-4 focus:outline-none focus:border-brand-orange"
-        />
+        <div className="relative mb-4">
+          <input
+            id="password" type={showPassword ? 'text' : 'password'} required
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 pr-12 border border-card-gray2 rounded-lg focus:outline-none focus:border-brand-orange"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute inset-y-0 right-3 flex items-center text-navy"
+          >
+            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+          </button>
+        </div>
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
@@ -150,7 +149,7 @@ export function LoginPage({ isModal = false, onClose, onSwitchToSignup }) {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-modal-top flex items-center justify-center bg-black/60 px-4">
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4">
         {form}
       </div>
     );

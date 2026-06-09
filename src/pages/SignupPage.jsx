@@ -1,31 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
-import { getUserFriendlyApiMessage } from '../api/apiErrors';
-import { useModalStack } from '../hooks/useModalStack';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-  useModalStack(isModal);
-
-  useEffect(() => {
-    if (!isModal) return undefined;
-    function onKey(e) {
-      if (e.key === 'Escape') onClose?.();
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isModal, onClose]);
-
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -52,7 +42,7 @@ export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
       });
       navigate('/');
     } catch (err) {
-      setError(getUserFriendlyApiMessage(err, 'Signup failed'));
+      setError(err.message || 'Signup failed');
     } finally {
       setSubmitting(false);
     }
@@ -101,19 +91,39 @@ export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
         />
 
         <label className="block text-sm font-medium text-navy mb-1" htmlFor="password">Password</label>
-        <input
-          id="password" type="password" required minLength={8}
-          value={password} onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-3 border border-card-gray2 rounded-lg mb-2 focus:outline-none focus:border-brand-orange"
-        />
+        <div className="relative mb-2">
+          <input
+            id="password" type={showPassword ? 'text' : 'password'} required minLength={8}
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 pr-12 border border-card-gray2 rounded-lg focus:outline-none focus:border-brand-orange"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute inset-y-0 right-3 flex items-center text-navy"
+          >
+            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+          </button>
+        </div>
         <p className="text-xs text-text-muted2 mb-4">At least 8 characters.</p>
 
         <label className="block text-sm font-medium text-navy mb-1" htmlFor="confirmPassword">Confirm password</label>
-        <input
-          id="confirmPassword" type="password" required minLength={8}
-          value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-4 py-3 border border-card-gray2 rounded-lg mb-4 focus:outline-none focus:border-brand-orange"
-        />
+        <div className="relative mb-4">
+          <input
+            id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} required minLength={8}
+            value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 pr-12 border border-card-gray2 rounded-lg focus:outline-none focus:border-brand-orange"
+          />
+          <button
+            type="button"
+            aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+            onClick={() => setShowConfirmPassword((s) => !s)}
+            className="absolute inset-y-0 right-3 flex items-center text-navy"
+          >
+            {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+          </button>
+        </div>
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
@@ -156,7 +166,7 @@ export function SignupPage({ isModal = false, onClose, onSwitchToLogin }) {
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-modal-top flex items-center justify-center bg-black/60 px-4 py-6 overflow-y-auto">
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 py-6 overflow-y-auto">
         {form}
       </div>
     );
