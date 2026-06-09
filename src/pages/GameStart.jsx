@@ -9,14 +9,14 @@ export function GameStart() {
   const navigate = useNavigate();
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
-  const categorySlug = location.state?.categorySlug || null;
+  const categoryId = location.state?.categoryId || null;
   const categoryName = location.state?.categoryName || '';
 
   async function startSession() {
     setError(null);
     setStarting(true);
     try {
-      const body = categorySlug ? { categorySlug } : {};
+      const body = categoryId ? { categoryId } : {};
       const data = await api.post('/sessions/start', body);
       navigate(`/game/${data.session.id}`, {
         state: {
@@ -38,7 +38,7 @@ export function GameStart() {
         onBack={() => navigate('/')}
         onStartPlaying={startSession}
         categoryName={categoryName}
-        isPremiumFlow={Boolean(categorySlug)}
+        isPremiumFlow={Boolean(categoryId)}
         isStarting={starting}
       />
       {error && (

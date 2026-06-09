@@ -3,6 +3,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const pinoHttp = require('pino-http');
+const path = require('path');
 const env = require('./config/env');
 const { errorHandler } = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimit');
@@ -30,7 +31,9 @@ function createApp() {
     redact: ['req.headers.authorization', 'req.headers.cookie'],
   }));
 
-  app.use(helmet());
+  app.use( helmet({
+    crossOriginResourcePolicy: false,
+  }));
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
@@ -38,7 +41,12 @@ function createApp() {
 
   app.get('/health', (req, res) => res.json({ status: 'ok' }));
   app.use('/categories', categoryRoutes);
-  app.use('/sessions', sessionRoutes);
+app.use(
+  '/uploads/categories',
+  express.static(
+    path.resolve(__dirname, '..', 'uploads', 'categories')
+  )
+);  app.use('/sessions', sessionRoutes);
   app.use('/auth', authRoutes);
   app.use('/profile', profileRoutes);
   app.use('/billing', billingRoutes);

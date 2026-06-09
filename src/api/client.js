@@ -12,7 +12,11 @@ export class ApiError extends Error {
 }
 
 async function doFetch(path, { method = 'GET', body, headers = {}, skipAuth = false } = {}) {
-  const finalHeaders = { 'Content-Type': 'application/json', ...headers };
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  const finalHeaders = { ...headers };
+  if (!isFormData) {
+    finalHeaders['Content-Type'] = finalHeaders['Content-Type'] || 'application/json';
+  }
   if (!skipAuth) {
     const access = tokenStorage.getAccess();
     if (access) finalHeaders.Authorization = `Bearer ${access}`;
@@ -20,7 +24,7 @@ async function doFetch(path, { method = 'GET', body, headers = {}, skipAuth = fa
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers: finalHeaders,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
   return res;
 }

@@ -18,7 +18,7 @@ export function PuzzlesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
-  const [categorySlug, setCategorySlug] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
@@ -27,7 +27,7 @@ export function PuzzlesPage() {
   async function load() {
     try {
       const params = { page, limit: 20 };
-      if (categorySlug) params.categorySlug = categorySlug;
+      if (categoryId) params.categoryId = categoryId;
       const [pList, cList] = await Promise.all([
         adminApi.listPuzzles(params),
         adminApi.listCategories(),
@@ -42,7 +42,7 @@ export function PuzzlesPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, categorySlug]);
+  }, [page, categoryId]);
 
   const categoryById = useMemo(() => {
     const m = {};
@@ -145,25 +145,25 @@ export function PuzzlesPage() {
           className="flex-1 min-w-[200px] border border-card-gray2 rounded px-3 py-2"
         />
         <select
-          value={categorySlug}
+          value={categoryId}
           onChange={(e) => {
-            setCategorySlug(e.target.value);
+            setCategoryId(e.target.value);
             setPage(1);
           }}
           className="border border-card-gray2 rounded px-3 py-2 bg-white"
         >
           <option value="">All categories</option>
           {categories.map((c) => (
-            <option key={c._id} value={c.slug}>
+            <option key={c._id} value={c._id}>
               {c.name}
             </option>
           ))}
         </select>
-        {(search || categorySlug) && (
+        {(search || categoryId) && (
           <button
             onClick={() => {
               setSearch('');
-              setCategorySlug('');
+              setCategoryId('');
               setPage(1);
             }}
             className="text-sm text-brand-orange-dark underline"

@@ -1,4 +1,4 @@
-/** Visual + copy for known category slugs (aligned with CategorySelection). */
+/** Visual + copy for known category names (aligned with CategorySelection). */
 export const CATEGORY_UI = {
   music: {
     catname: 'Music',
@@ -47,16 +47,26 @@ export const CATEGORY_UI = {
   },
 };
 
+export function normalizeCategoryName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+}
+
+export function getCategoryUi(apiCat) {
+  return CATEGORY_UI[normalizeCategoryName(apiCat?.name)] || {};
+}
+
 export function displayForCategory(apiCat) {
-  const slug = apiCat?.slug;
-  const ui = (slug && CATEGORY_UI[slug]) || {};
+  const ui = getCategoryUi(apiCat);
   const displayName = ui.catname || apiCat?.name || 'Category';
   const description =
     ui.description || 'Solve puzzles from this category and test your skills with fun challenges ahead!';
   return {
-    slug,
+    id: apiCat?._id || null,
     displayName,
     description,
-    image: ui.image || null,
+    image: apiCat?.image || ui.image || null,
   };
 }

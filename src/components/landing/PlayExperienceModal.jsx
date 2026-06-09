@@ -18,7 +18,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
   const [showGameStart, setShowGameStart] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [isPremiumFlow, setIsPremiumFlow] = useState(false);
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState("");
   const [freePreviewImage, setFreePreviewImage] = useState(null);
   const [freePreviewBlurb, setFreePreviewBlurb] = useState(null);
@@ -39,7 +39,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       setShowGameStart(false);
       setShowCategorySelection(false);
       setIsPremiumFlow(false);
-      setSelectedCategorySlug(null);
+      setSelectedCategoryId(null);
       setSelectedCategoryName("");
       setFreePreviewImage(null);
       setFreePreviewBlurb(null);
@@ -67,8 +67,8 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     setError(null);
     setStarting(true);
     try {
-      const body = selectedCategorySlug
-        ? { categorySlug: selectedCategorySlug }
+      const body = selectedCategoryId
+        ? { categoryId: selectedCategoryId }
         : {};
       const data = await api.post("/sessions/start", body);
       onClose?.();
@@ -96,7 +96,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     }
     const raw = pool[Math.floor(Math.random() * pool.length)];
     const d = displayForCategory(raw);
-    setSelectedCategorySlug(null);
+    setSelectedCategoryId(null);
     setSelectedCategoryName(d.displayName);
     setFreePreviewImage(d.image || "/semistar.png");
     setFreePreviewBlurb(d.description);
@@ -146,7 +146,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
         onClose={onClose}
         onBack={() => setShowCategorySelection(false)}
         onSelectCategory={async (category) => {
-          if (category.slug === "random") {
+          if (category.isRandom) {
             if (starting) return;
             setError(null);
             setStarting(true);
@@ -166,7 +166,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
             return;
           }
           setPremiumPickerRandomFlow(false);
-          setSelectedCategorySlug(category.slug);
+          setSelectedCategoryId(category.id);
           setSelectedCategoryName(category.name || "Selected Category");
           setFreePreviewImage(category.image || null);
           setFreePreviewBlurb(category.description || null);

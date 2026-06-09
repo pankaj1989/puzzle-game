@@ -6,10 +6,10 @@ const { listPuzzlesQuery, mongoId } = require('../validators/adminPuzzleValidato
 async function list(req, res) {
   const parsed = listPuzzlesQuery.safeParse(req.query);
   if (!parsed.success) throw new HttpError(400, 'Invalid query', 'VALIDATION_ERROR');
-  const { page, limit, categorySlug } = parsed.data;
+  const { page, limit, categoryId } = parsed.data;
   const filter = {};
-  if (categorySlug) {
-    const cat = await Category.findOne({ slug: categorySlug });
+  if (categoryId) {
+    const cat = await Category.findById(categoryId);
     if (!cat) return res.json({ puzzles: [], total: 0, page, limit });
     filter.categoryId = cat._id;
   }

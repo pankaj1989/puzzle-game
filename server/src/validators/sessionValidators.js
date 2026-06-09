@@ -1,14 +1,14 @@
 const { z } = require('zod');
 
+const mongoIdSchema = z.string().regex(/^[a-f0-9]{24}$/);
+
 const startSessionSchema = z.object({
-  categorySlug: z.string().min(1).max(40).regex(/^[a-z0-9-]+$/).optional(),
+  categoryId: mongoIdSchema.optional(),
 }).strict();
 
 const guessSchema = z.object({
   guess: z.string().min(1).max(200),
 }).strict();
-
-const mongoIdSchema = z.string().regex(/^[a-f0-9]{24}$/);
 
 const listSessionsQuery = z.object({
   page: z.coerce.number().int().positive().default(1),

@@ -19,7 +19,7 @@ const updatePuzzleSchema = createPuzzleSchema.partial().strict();
 const listPuzzlesQuery = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  categorySlug: z.string().max(40).optional(),
+  categoryId: mongoId.optional(),
 });
 
 module.exports = { createPuzzleSchema, updatePuzzleSchema, listPuzzlesQuery, mongoId };

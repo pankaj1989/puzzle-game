@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { adminApi } from '../../admin/api';
+import { useEffect, useState } from "react";
+import { adminApi } from "../../admin/api";
+
+const EMPTY_FORM = { name: "", image: null, isPremium: false };
 
 export function CategoriesPage() {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ slug: '', name: '', icon: '', isPremium: false });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -24,13 +26,12 @@ export function CategoriesPage() {
     setError(null);
     setBusy(true);
     try {
-      await adminApi.createCategory({
-        slug: form.slug.trim(),
-        name: form.name.trim(),
-        icon: form.icon.trim() || undefined,
-        isPremium: !!form.isPremium,
-      });
-      setForm({ slug: '', name: '', icon: '', isPremium: false });
+      const body = new FormData();
+      body.append("name", form.name.trim());
+      body.append("isPremium", String(Boolean(form.isPremium)));
+      if (form.image) body.append("image", form.image);
+      await adminApi.createCategory(body);
+      setForm(EMPTY_FORM);
       await load();
     } catch (err) {
       setError(err.message);
@@ -64,18 +65,8 @@ export function CategoriesPage() {
 
       <form
         onSubmit={create}
-        className="bg-white rounded-xl border border-card-gray2 p-4 mb-6 grid sm:grid-cols-5 gap-2 items-end"
+        className="bg-white rounded-xl border border-card-gray2 p-4 mb-6 grid sm:grid-cols-4 gap-3 items-end"
       >
-        <label className="block text-sm">
-          Slug
-          <input
-            value={form.slug}
-            onChange={(e) => setForm({ ...form, slug: e.target.value })}
-            required
-            pattern="[a-z0-9-]+"
-            className="w-full border border-card-gray2 rounded px-2 py-1"
-          />
-        </label>
         <label className="block text-sm">
           Name
           <input
@@ -86,12 +77,15 @@ export function CategoriesPage() {
           />
         </label>
         <label className="block text-sm">
-          Icon path
+          Category image
           <input
-            value={form.icon}
-            onChange={(e) => setForm({ ...form, icon: e.target.value })}
+          required
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setForm({ ...form, image: e.target.files?.[0] || null })
+            }
             className="w-full border border-card-gray2 rounded px-2 py-1"
-            placeholder="/icon.png"
           />
         </label>
         <label className="flex items-center gap-2 text-sm">
@@ -107,18 +101,21 @@ export function CategoriesPage() {
           disabled={busy}
           className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange disabled:opacity-60"
         >
-          {busy ? 'Saving…' : 'Add'}
+          {busy ? "Saving…" : "Add"}
         </button>
       </form>
 
       {error && (
-        <div className="text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">{error}</div>
+        <div className="text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
+          {error}
+        </div>
       )}
+
 
       <table className="w-full bg-white rounded-xl border border-card-gray2">
         <thead className="text-left text-xs uppercase text-text-muted2">
           <tr>
-            <th className="p-3">Slug</th>
+            <th className="p-3">Image</th>
             <th className="p-3">Name</th>
             <th className="p-3">Premium</th>
             <th className="p-3"></th>
@@ -127,20 +124,36 @@ export function CategoriesPage() {
         <tbody>
           {rows.map((r) => (
             <tr key={r._id} className="border-t border-card-gray2">
-              <td className="p-3 font-mono text-sm">{r.slug}</td>
+              {
+                console.log("adasd",r)
+              }
+              <td className="p-3">
+                <img
+                // src="http://localhost:4000/categories/1781011402131.png "
+                  src={`${import.meta.env.VITE_MEDIAURL}/${r.image}`}
+                  alt={r.name}
+                  className="h-12 w-12 rounded-lg object-cover border border-card-gray2"
+                />
+                
+              </td>
               <td className="p-3">{r.name}</td>
               <td className="p-3">
                 <button
                   onClick={() => togglePremium(r)}
                   className={`text-xs px-2 py-1 rounded ${
-                    r.isPremium ? 'bg-brand-orange text-white' : 'bg-card-gray text-navy'
+                    r.isPremium
+                      ? "bg-brand-orange text-white"
+                      : "bg-card-gray text-navy"
                   }`}
                 >
-                  {r.isPremium ? 'Premium' : 'Free'}
+                  {r.isPremium ? "Premium" : "Free"}
                 </button>
               </td>
               <td className="p-3 text-right">
-                <button onClick={() => remove(r)} className="text-red-600 text-sm underline">
+                <button
+                  onClick={() => remove(r)}
+                  className="text-red-600 text-sm underline"
+                >
                   Delete
                 </button>
               </td>

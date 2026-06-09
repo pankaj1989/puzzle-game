@@ -5,6 +5,7 @@ const { pickRandomPuzzle } = require('../services/puzzleService');
 const { calculateScore, normalizeAnswer } = require('../services/scoringService');
 const { computeStreakUpdate } = require('../services/streakService');
 const { buildShareText } = require('../services/shareService');
+const { serializeCategory } = require('../services/categorySerializer');
 const { mongoIdSchema, listSessionsQuery } = require('../validators/sessionValidators');
 const { HttpError } = require('../middleware/errorHandler');
 
@@ -23,7 +24,12 @@ function serializePuzzle(puzzle) {
 
 function serializeCategorySummary(category) {
   if (!category) return null;
-  return { slug: category.slug, name: category.name };
+  return {
+    _id: category._id,
+    name: category.name,
+    image: category.image,
+    isPremium: Boolean(category.isPremium),
+  };
 }
 
 function serializeSession(session) {
@@ -42,14 +48,14 @@ function serializeSession(session) {
 }
 
 async function startSession(req, res) {
-  const { categorySlug } = req.body;
+  const { categoryId } = req.body;
   const isFree = req.user.plan !== 'premium';
 
   let requestedCategory = null;
-  if (categorySlug) {
-    requestedCategory = await Category.findOne({ slug: categorySlug });
+  if (categoryId) {
+    requestedCategory = await Category.findById(categoryId);
     if (!requestedCategory) {
-      throw new HttpError(404, `Category '${categorySlug}' not found`, 'CATEGORY_NOT_FOUND');
+      throw new HttpError(404, 'Category not found', 'CATEGORY_NOT_FOUND');
     }
     if (isFree) {
       throw new HttpError(403, 'Premium plan required to choose this category', 'PLAN_REQUIRED');
@@ -61,8 +67,8 @@ async function startSession(req, res) {
     freeOnly: isFree,
   });
   if (!puzzle) {
-    if (categorySlug) {
-      throw new HttpError(404, `No puzzle available for category '${categorySlug}'`, 'NO_PUZZLE_IN_CATEGORY');
+    if (categoryId) {
+      throw new HttpError(404, 'No puzzle available for category', 'NO_PUZZLE_IN_CATEGORY');
     }
     throw new HttpError(404, 'No puzzle available', 'NO_PUZZLE_AVAILABLE');
   }
@@ -72,12 +78,12 @@ async function startSession(req, res) {
     puzzleId: puzzle._id,
   });
 
-  const categoryDoc = await Category.findById(puzzle.categoryId).select('slug name').lean();
+  const categoryDoc = await Category.findById(puzzle.categoryId).lean();
 
   res.status(201).json({
     session: serializeSession(session),
     puzzle: serializePuzzle(puzzle),
-    category: serializeCategorySummary(categoryDoc),
+    category: serializeCategorySummary(categoryDoc ? serializeCategory(req, categoryDoc) : null),
   });
 }
 
@@ -188,11 +194,11 @@ async function getSession(req, res) {
   }
   const puzzle = await Puzzle.findById(session.puzzleId);
   if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
-  const categoryDoc = await Category.findById(puzzle.categoryId).select('slug name').lean();
+  const categoryDoc = await Category.findById(puzzle.categoryId).lean();
   res.json({
     session: serializeSession(session),
     puzzle: serializePuzzle(puzzle),
-    category: serializeCategorySummary(categoryDoc),
+    category: serializeCategorySummary(categoryDoc ? serializeCategory(req, categoryDoc) : null),
   });
 }
 

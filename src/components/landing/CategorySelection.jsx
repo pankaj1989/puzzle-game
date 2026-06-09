@@ -3,7 +3,7 @@ import { IoIosShuffle } from "react-icons/io";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import { getUserFriendlyApiMessage } from "../../api/apiErrors";
-import { CATEGORY_UI } from "./categoryUiConfig.js";
+import { getCategoryUi, normalizeCategoryName } from "./categoryUiConfig.js";
 
 function CategoryHeroArt({ category }) {
   const [imgFailed, setImgFailed] = useState(false);
@@ -76,14 +76,14 @@ export function CategorySelection({
 
   const viewCategories = useMemo(() => {
     const items = categories.map((c, idx) => {
-      const slug = c.slug;
-      const ui = CATEGORY_UI[slug] || {};
-      const isRandom = Boolean(ui.isRandom) || slug === "random";
-      const rawImage = isRandom ? null : ui.image || c.icon || null;
+      const ui = getCategoryUi(c);
+      const normalizedName = normalizeCategoryName(c.name);
+      const isRandom = Boolean(ui.isRandom) || normalizedName === "random";
+      const rawImage = isRandom ? null : c.image || ui.image || null;
       const label = ui.catname || c.name;
       return {
-        id: c._id || slug || idx,
-        slug,
+        id: c._id || idx,
+        categoryId: c._id || null,
         name: c.name,
         catname: label,
         description: ui.description || "Solve puzzles from this category.",
@@ -171,10 +171,11 @@ export function CategorySelection({
                   type="button"
                   onClick={() =>
                     onSelectCategory?.({
-                      slug: category.slug,
+                      id: category.categoryId,
                       name: category.catname,
                       image: category.isRandom ? null : category.image,
                       description: category.description,
+                      isRandom: category.isRandom,
                     })
                   }
                   className="group w-full text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 relative h-[320px] flex flex-col justify-end"
