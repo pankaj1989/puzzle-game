@@ -17,6 +17,8 @@ function serializePuzzle(puzzle) {
     difficulty: puzzle.difficulty,
     clue: puzzle.clue,
     revealSequence: puzzle.revealSequence,
+    answerLength: puzzle.revealSequence.length,
+    wordLengths: puzzle.answer.split(' ').map((w) => w.length),
     basePoints: puzzle.basePoints,
     timeLimitSeconds: puzzle.timeLimitSeconds,
   };

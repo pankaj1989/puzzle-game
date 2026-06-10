@@ -4,6 +4,8 @@ import { IoArrowBack } from 'react-icons/io5';
 import { api } from '../api/client';
 import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
+import { SegmentedAnswerInput } from '../components/game/SegmentedAnswerInput';
+import { cellsToGuess, clearUnrevealedCells, initCells } from '../components/game/answerSlots';
 import AdSlot from '../ads/AdSlot';
 
 export function GamePlay() {
@@ -102,9 +104,13 @@ export function GamePlay() {
 
 function GameScreen({ initialSession, puzzle }) {
   const navigate = useNavigate();
+  const wordLengths = useMemo(() => {
+    if (puzzle.wordLengths?.length) return puzzle.wordLengths;
+    const len = puzzle.answerLength ?? puzzle.revealSequence?.length ?? 0;
+    return len > 0 ? [len] : [];
+  }, [puzzle]);
   const [session, setSession] = useState(initialSession);
-  const [guess, setGuess] = useState('');
-  const [revealed, setRevealed] = useState({});
+  const [cells, setCells] = useState(() => initCells(wordLengths));
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -124,9 +130,10 @@ function GameScreen({ initialSession, puzzle }) {
   const remaining = Math.max(0, totalSec - elapsedSec);
   const timeUp = remaining === 0 && !result;
 
-  async function submitGuess(e) {
-    e.preventDefault();
-    if (submitting || result || !guess.trim()) return;
+  async function submitGuess(nextCells) {
+    if (submitting || result) return;
+    const guess = cellsToGuess(nextCells ?? cells, wordLengths);
+    if (!guess.trim()) return;
     setError(null);
     setSubmitting(true);
     try {
@@ -136,23 +143,12 @@ function GameScreen({ initialSession, puzzle }) {
         setResult({ solved: true, score: data.score, correctAnswer: data.correctAnswer });
       } else {
         setError('Not quite — try again.');
-        setGuess('');
+        setCells((prev) => clearUnrevealedCells(prev, {}, wordLengths));
       }
     } catch (err) {
       setError(getUserFriendlyApiMessage(err));
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function requestHint() {
-    setError(null);
-    try {
-      const data = await api.post(`/sessions/${session.id}/hint`, {});
-      setRevealed((prev) => ({ ...prev, [data.nextHint.index]: data.nextHint.letter }));
-      setSession((prev) => ({ ...prev, hintsUsed: data.hintsUsed }));
-    } catch (err) {
-      setError(getUserFriendlyApiMessage(err));
     }
   }
 
@@ -182,44 +178,33 @@ function GameScreen({ initialSession, puzzle }) {
     );
   }
 
-  const hintsMax = puzzle.revealSequence.length;
-  const hintsLeft = hintsMax - session.hintsUsed;
+  const displayScore = session.score || 0;
 
   return (
     <div
-      className="min-h-screen py-6 px-1 sm:px-6 lg:px-8"
+      className="min-h-screen py-4 sm:py-6 px-3 sm:px-6 lg:px-8"
       style={{ background: 'linear-gradient(350deg, #FFFBF5 0%, #FFF5E9 30%, #FFE8D6 60%, #FFD4B8 100%)' }}
     >
-      <div className="mx-auto mb-8 sm:mb-12">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* Header */}
+      <div className="max-w-5xl mx-auto mb-6 sm:mb-10">
+        <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#FFFFFF6E] hover:bg-gray-50 text-gray-800 font-medium text-[14px] sm:text-[15px] shadow-sm border border-white"
+            className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#FFFFFF6E] hover:bg-white text-gray-800 font-medium text-sm sm:text-[15px] shadow-sm border border-white"
           >
             <IoArrowBack className="size-4 sm:size-5" />
             <span>Exit Game</span>
           </button>
 
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#FFFFFF6E] text-gray-800 font-medium text-[14px] sm:text-[15px] shadow-sm border border-white">
-              <span>
-                Wrong: <span className="font-bold">{session.wrongGuesses}</span>
-              </span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#FFFFFF6E] text-gray-800 font-medium text-sm sm:text-[15px] shadow-sm border border-white">
+              Score: <span className="font-bold">{displayScore}</span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowPremiumModal(true)}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-[14px] sm:text-[15px] shadow-sm transition-all flex items-center gap-2"
-            >
-              <span>👑</span>
-              <span>Premium</span>
-            </button>
-
-            <div className="px-4 sm:px-6 py-2 sm:py-2 rounded-full bg-[#FE9A0021] border border-[#FE9A00] shadow-sm flex items-center gap-2">
-              <img src="/clock.svg" alt="Clock" />
-              <span className={`font-bold text-[14px] sm:text-[15px] ${remaining < 10 ? 'text-red-600' : 'text-[#073165]'}`}>
+            <div className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#FE9A0021] border border-[#FE9A00] shadow-sm flex items-center gap-2">
+              <img src="/clock.svg" alt="" className="size-4 sm:size-5" />
+              <span className={`font-bold text-sm sm:text-[15px] ${remaining < 10 ? 'text-red-600' : 'text-[#073165]'}`}>
                 {remaining}s
               </span>
             </div>
@@ -227,20 +212,19 @@ function GameScreen({ initialSession, puzzle }) {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mb-8">
-          <div className="w-full sm:max-w-[60%] lg:w-auto flex flex-col justify-center border-[10px] border-[#264DA7] rounded-[28px] lg:rounded-[50px] bg-white overflow-hidden">
+      <div className="max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8">
+        {/* Puzzle plate + clue */}
+        <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 sm:gap-6">
+          <div className="w-full md:w-[55%] flex flex-col border-8 sm:border-14 border-gray-100 rounded-[24px] sm:rounded-[62px] bg-white overflow-hidden shadow-lg">
             <img src="/gamebase.png" alt="" className="w-full" />
-            <div className="flex bg-white items-center justify-center px-4 py-6">
+            <div className="flex bg-white items-center justify-center px-3 py-4 sm:py-1 min-h-[80px] sm:min-h-[100px]">
               <h2
+                className="uppercase text-center text-[#073165]"
                 style={{
-                  fontFamily: 'Alumni Sans',
+                  fontFamily: 'Alumni Sans, sans-serif',
                   fontWeight: 400,
-                  fontSize: 'clamp(60px, 10vw, 128px)',
-                  lineHeight: 1,
-                  color: '#073165',
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
+                  fontSize: 'clamp(48px, 12vw, 120px)',
+                  lineHeight: 0,
                   letterSpacing: '0.05em',
                 }}
               >
@@ -250,72 +234,39 @@ function GameScreen({ initialSession, puzzle }) {
             <img src="/gamebase2.png" alt="" className="w-full" />
           </div>
 
-          <div className="w-full py-3 sm:max-w-[40%] lg:w-auto lg:flex-1 bg-[#032563] border-[10px] border-[#264DA7] rounded-[25px] shadow-lg text-white">
-            <p className="text-[#FE9A00] font-bold text-[32px] sm:text-[36px] text-center">Clue</p>
-            <p className="text-white px-4 text-[18px] sm:text-[22px] text-center">{puzzle.clue}</p>
-            <div className="mt-3 text-center text-xs text-white/70">
-              {puzzle.difficulty} · {puzzle.basePoints} base pts · {hintsLeft} hints left
-            </div>
+          <div className="w-full md:w-[45%] flex flex-col bg-[#032563] border-8 sm:border-14 border-[#264DA7] rounded-[20px] sm:rounded-[62px] shadow-lg text-white min-h-[160px]">
+            <p className="text-[#FE9A00] font-bold text-2xl sm:text-[34px] text-center pt-4 sm:pt-2 ">Clue</p>
+            <p className="text-white px-4 sm:px-6 text-base sm:text-[24px] text-center mt-2 flex items-center justify-center leading-snug">
+              {puzzle.clue}
+            </p>
+            {/* <p className="text-center text-xs text-white/60 pb-4">
+              {puzzle.difficulty} · {puzzle.basePoints} base pts
+            </p> */}
           </div>
         </div>
 
-        {Object.keys(revealed).length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-2 justify-center">
-            <span className="text-xs uppercase tracking-wide text-text-muted2 w-full text-center mb-1">Revealed letters</span>
-            {Object.entries(revealed)
-              .sort((a, b) => Number(a[0]) - Number(b[0]))
-              .map(([idx, letter]) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded bg-card-yellow border border-[#FE9A00] text-navy font-mono font-bold"
-                >
-                  [{idx}] {letter}
-                </span>
-              ))}
+        {/* Answer plate with segmented inputs */}
+        <div className="w-full">
+          <div className="w-full border-8 sm:border-14 border-[#264DA7] rounded-[24px] sm:rounded-[62px] bg-white overflow-hidden shadow-xl">
+            <img src="/gamebase.png" alt="" className="w-full" />
+            <div className="bg-white px-2 sm:px-4 py-6 sm:py-10">
+              <SegmentedAnswerInput
+                wordLengths={wordLengths}
+                cells={cells}
+                onChange={setCells}
+                disabled={submitting}
+                onSubmit={submitGuess}
+              />
+              <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#6a7282]">
+                {submitting ? 'Checking…' : 'Type your answer'}
+              </p>
+              {error && (
+                <p className="mt-3 text-center text-sm text-red-600">{error}</p>
+              )}
+            </div>
+            <img src="/gamebase2.png" alt="" className="w-full" />
           </div>
-        )}
-
-        <form onSubmit={submitGuess} className="max-w-xl mx-auto">
-          <label className="block text-xs uppercase tracking-wide text-text-muted2 mb-2 text-center" htmlFor="guess">
-            Type your answer
-          </label>
-          <input
-            id="guess"
-            type="text"
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            disabled={submitting}
-            className="w-full px-4 py-3 border-2 border-navy rounded-lg text-lg focus:outline-none focus:border-brand-orange bg-white"
-            placeholder="e.g. love tomorrow"
-            autoFocus
-          />
-
-          <div className="flex gap-3 mt-3">
-            <button
-              type="submit"
-              disabled={submitting || !guess.trim()}
-              className="flex-1 py-3 rounded-lg navy-gradient text-cream font-semibold border-2 border-brand-orange disabled:opacity-60"
-            >
-              {submitting ? 'Checking…' : 'Submit'}
-            </button>
-            <button
-              type="button"
-              onClick={requestHint}
-              disabled={hintsLeft === 0 || submitting}
-              className="py-3 px-5 rounded-lg border-2 border-navy text-navy font-semibold bg-white hover:bg-cream disabled:opacity-60"
-            >
-              Hint ({hintsLeft})
-            </button>
-          </div>
-
-          {error && (
-            <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{error}</div>
-          )}
-
-          <div className="mt-4 text-center text-xs text-text-muted2">
-            Wrong guesses: {session.wrongGuesses} · Hints used: {session.hintsUsed}
-          </div>
-        </form>
+        </div>
       </div>
 
       <PremiumAdModal isOpen={showPremiumModal} onClose={() => setShowPremiumModal(false)} onUpgrade={() => setShowPremiumModal(false)} />
