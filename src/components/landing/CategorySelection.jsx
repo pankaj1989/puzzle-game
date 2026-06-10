@@ -198,13 +198,13 @@ export function CategorySelection({
                   >
                     {/* <div className="pointer-events-none absolute inset-0 flex items-center justify-center"> */}
                     <span
-                      className="pointer-events-none select-none text-center font-black uppercase leading-none text-white/[0.09]"
+                      className="pointer-events-none select-none text-center font-black uppercase leading-none text-white/9 mt-10 md:mt-2"
                       style={{
                         fontFamily: "Inter, system-ui, sans-serif",
                         fontSize:
                           category.watermarkText.length > 9
                             ? "clamp(36px, 9vw, 48px)"
-                            : category.watermarkText.length > 6
+                            : category.watermarkText.length > 6 
                               ? "clamp(44px, 11vw, 72px)"
                               : "clamp(52px, 13vw, 76px)",
                       }}

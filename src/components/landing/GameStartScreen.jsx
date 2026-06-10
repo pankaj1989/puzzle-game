@@ -38,9 +38,9 @@ export function GameStartScreen({
           background:
             " linear-gradient(140deg, #FFFBF5 0%, #FFF5E9 30%, #FFE8D6 60%, #FFD4B8 100%)",
         }}
-        className="fixed inset-0 z-modal-nested overflow-y-auto min-h-screen p-6 "
+        className="fixed inset-0 z-modal-nested overflow-y-auto min-h-screen p-2 md:p-6 "
       >
-        <div className="z-50 flex items-center justify-between px-20">
+        <div className="z-50 flex items-center justify-between md:px-20">
           {/* Back button */}
           <button
             onClick={onBack}
@@ -55,8 +55,8 @@ export function GameStartScreen({
         </div>
 
         {/* Content */}
-        <div className="z-40 flex flex-col items-center justify-center px-4 sm:px-6">
-          <div className="flex items-center gap-2 px-3 sm:px-5 py-3 sm:py-2 rounded-full bg-[#E9D4FF80] text-purple-700 border-2 border-purple-200 font-semibold text-[10px] sm:text-[13px] uppercase tracking-[1px]">
+        <div className="z-40 flex flex-col items-center justify-center px-0 sm:px-6 mt-3">
+          <div className="flex items-center gap-2 px-3 sm:px-5 py-2 rounded-full bg-[#E9D4FF80] text-purple-700 border-2 border-purple-200 font-semibold text-[10px] sm:text-[13px] uppercase tracking-[1px]">
             <IoIosShuffle className="size-3.5 sm:size-6" />
             <span className="text-[#59168B]">
               {isPremiumFlow
@@ -64,9 +64,9 @@ export function GameStartScreen({
                 : "Your Random Category"}
             </span>
           </div>
-          <div className="max-w-[750px] w-full">
+          <div className="max-w-[750px] w-full relative">
             {/* Header */}
-            <div className="text-center mb-4 sm:mb-6 px-2">
+            <div className="text-center px-2">
               <h2 className="font-serif text-[28px] sm:text-[40px] md:text-[65px] font-bold text-navy-dark leading-tight mb-2">
                 Ready to play?
               </h2>
@@ -76,61 +76,74 @@ export function GameStartScreen({
             </div>
 
             {/* Stars */}
-            <div className="flex items-center justify-center">
-              <img src="/semistar.png" alt="Star" className="w-20 sm:w-auto" />
-            </div>
 
             {/* Game Preview Card */}
-            <div className="relative bg-white rounded-[24px] sm:rounded-[40px] shadow-[0_12px_48px_rgba(0,0,0,0.12)] mb-6">
-              {/* Lion Image Container */}
-              <div className="relative bg-gradient-to-b from-gray-50 to-white flex flex-col sm:flex-row items-end justify-center rounded-t-[24px] sm:rounded-t-[40px] overflow-hidden p-4 sm:p-0">
-                {/* Placeholder for lion image - replace with actual image */}
-
-                <div className="flex items-center justify-center w-full sm:w-[40%] mb-4 sm:mb-0">
-                  <div className="relative sm:left-[40px] z-9">
-                    {/* Placeholder circle for image */}
-                    <img
-                      src={heroImageSrc}
-                      alt={categoryName || "Category"}
-                      className="h-32 sm:h-44 w-auto max-w-[min(100%,280px)] object-contain sm:object-cover rounded-2xl sm:rounded-full"
-                    />
-                  </div>
-                </div>
-
-                {/* Category Info Card */}
-                <div className="flex flex-col items-center sm:items-start justify-center sm:pt-[30px] gap-[10px] sm:gap-[20px] w-full sm:w-auto">
+            <div className="flex flex-col items-center justify-center ">
+              <div className="flex items-center justify-center ">
+                <img
+                  src="/semistar.png"
+                  alt="Star"
+                  className="w-[70%] sm:w-[60%]"
+                />
+              </div>
+              <div className="w-full relative bg-white rounded-[24px] sm:rounded-[24px] shadow-[0_12px_48px_rgba(0,0,0,0.12)] mb-6 ">
+                <div className="relative bg-gradient-to-b from-gray-50 to-white flex flex-col justify-center rounded-t-[24px] sm:rounded-t-[24px] overflow-hidden p-8 pb-2">
                   <img
                     src="./landing/puzzle.png"
                     alt="Puzzle"
-                    className="w-24 sm:w-full h-auto object-cover sm:relative sm:right-[110px] sm:bottom-[30px] sm:top-[0px]"
+                    className="w-[82%] mx-auto h-auto object-cover"
                   />
+                  {/* Category Info Card */}
+                  <div className="flex flex-col md:flex-row items-center justify-center pt-10 md:py-[30px] sm:w-auto relative">
+                    <div className=" flex items-center justify-center  mb-4 md:mb-0 md:absolute left-0">
+                      {/* Top image (outside circle) */}
+                      <div className="absolute md:-top-[100px] sm:-top-[70px] -top-[60px] z-20 md:w-[300px] md:h-[300px] w-[200px] h-[200px] aspect-square overflow-hidden">
+                        <img
+                          src={heroImageSrc}
+                          alt={categoryName || "Category"}
+                          className="md:h-[464px] md:w-[464px] w-full  object-contain "
+                        />
+                      </div>
 
-                  <div className="bg-[#264DA7] text-white rounded-[20px] sm:rounded-[25px] p-4 sm:p-6 mb-[10px] sm:mb-[20px] sm:relative sm:right-[45px] shadow-[0_4px_0_0_#E17100] w-full sm:flex">
-                    <div className="hidden sm:block sm:w-[30%]"></div>
-                    <div className="w-full sm:w-[70%]">
-                      <h3 className="font-serif text-[24px] sm:text-[32px] font-bold mb-2">
-                        {categoryName || "Random free category"}
-                      </h3>
-                      <p className="text-white/90 text-[13px] sm:text-[14px] leading-relaxed">
-                        {cardDescription || detailText}
-                      </p>
+                      {/* Circle */}
+                      <div className="relative md:w-[300px] md:h-[300px] w-[200px] h-[200px] aspect-square rounded-full border-4 border-blue-500 overflow-hidden z-10 bg-white">
+                        {/* Same image inside circle */}
+                        <img
+                          src={heroImageSrc}
+                          alt={categoryName || "Category"}
+                          className="absolute left-1/2 -translate-x-1/2 -top-[100px]  sm:h-[464px] sm:w-[464px] w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute left-0 bg-white h-full w-[80px] hidden md:block z-9"/>
+
+                    <div className="bg-[#264DA7] text-white rounded-[20px] sm:rounded-[25px] p-4 md:p-6  shadow-[0_4px_0_0_#E17100] w-full flex items-center justify-between md:h-[228px] relative">
+                      <div className="hidden md:block sm:w-[50%]"></div>
+                      <div className=" text-center md:text-left md:max-w-[50%] w-full">
+                        <h3 className="font-serif text-[24px] md:text-[46px] font-bold truncate">
+                          {categoryName || "Random free category"}
+                        </h3>
+                        <p className="text-white/90 text-[13px] md:text-[16px] leading-relaxed max-h-[100px] overflow-y-auto custom-scrollbar">
+                          {cardDescription || detailText}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Bottom Section with Start Button - Inside white card */}
-              <div className="bg-[#264DA7] relative flex items-center justify-center rounded-b-[20px] sm:rounded-b-[25px] mt-4">
-                {/* Start Playing Button */}
-                <button
-                  type="button"
-                  onClick={onStartPlaying}
-                  disabled={isStarting}
-                  className="w-[90%] sm:w-[85%] bg-gradient-to-r from-[#FE9A00] via-[#FF6900] to-[#E17100] hover:bg-orange-600 text-white font-bold text-[16px] sm:text-[20px] py-4 sm:py-5 px-8 sm:px-[100px] rounded-[10px] shadow-[0_8px_33px_-6px_rgba(255,255,255,0.88),0_0_5.9px_-5px_rgba(255,255,255,0.16),0_3px_11px_rgba(255,255,255,0.23)] transition-all hover:shadow-[0_16px_40px_rgba(255,149,0,0.6)] active:scale-[0.98] flex items-center justify-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-3 sm:mb-4 disabled:opacity-60 disabled:pointer-events-none"
-                >
-                  <IoPlaySharp className="size-5 sm:size-6" />
-                  <span>{isStarting ? "Starting…" : "Start Playing"}</span>
-                </button>
+                {/* Bottom Section with Start Button - Inside white card */}
+                <div className="bg-[#264DA7] relative flex items-center justify-center rounded-b-[20px] sm:rounded-b-[25px] mt-2">
+                  {/* Start Playing Button */}
+                  <button
+                    type="button"
+                    onClick={onStartPlaying}
+                    disabled={isStarting}
+                    className="w-[90%] sm:w-[85%] bg-gradient-to-r from-[#FE9A00] via-[#FF6900] to-[#E17100] hover:bg-orange-600 text-white font-bold text-[16px] sm:text-[20px] py-4 sm:py-5 px-8 sm:px-[100px] rounded-[10px] shadow-[0_8px_33px_-6px_rgba(255,255,255,0.88),0_0_5.9px_-5px_rgba(255,255,255,0.16),0_3px_11px_rgba(255,255,255,0.23)] transition-all hover:shadow-[0_16px_40px_rgba(255,149,0,0.6)] active:scale-[0.98] flex items-center justify-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-3 sm:mb-4 disabled:opacity-60 disabled:pointer-events-none"
+                  >
+                    <IoPlaySharp className="size-5 sm:size-6" />
+                    <span>{isStarting ? "Starting…" : "Start Playing"}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

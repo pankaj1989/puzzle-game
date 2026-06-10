@@ -25,10 +25,10 @@
   --color-card-blue2: #e5e7eb;
   --color-card-purple2: #59168b;
   --color-card-gray: #f3f4f6;
-  --color-text-muted2: #99A1AF;
-  --color-card-gray2: #D1D5DC;
-  --color-brand-orange2: #FE9A00;
-  --color-brand-orange3: #FE9900;
+  --color-text-muted2: #99a1af;
+  --color-card-gray2: #d1d5dc;
+  --color-brand-orange2: #fe9a00;
+  --color-brand-orange3: #fe9900;
 
   --font-sans:
     "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
@@ -54,10 +54,10 @@ body {
   color: var(--color-text-body);
   background: linear-gradient(
     140deg,
-    #FFFBF5 0%,
-    #FFF5E9 30%,
-    #FFE8D6 60%,
-    #FFD4B8 100%
+    #fffbf5 0%,
+    #fff5e9 30%,
+    #ffe8d6 60%,
+    #ffd4b8 100%
   );
   /* background: linear-gradient(
     160deg,
@@ -113,9 +113,8 @@ img {
 }
 
 .orange-glow2 {
-  background: linear-gradient(120deg, #fe98004f 0%, #FF69001A 100%);
+  background: linear-gradient(120deg, #fe98004f 0%, #ff69001a 100%);
 }
-
 
 .text-gradient {
   background: linear-gradient(
@@ -157,4 +156,19 @@ img {
 }
 .z-modal-top {
   z-index: 80;
+}
+
+.custom-scrollbar {
+  padding-right: 6px;
+  scrollbar-width: thin !important;
+  scrollbar-color: #e9d4ff1f #e9d4ff2a;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #3a0077c5;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #460091a9;
 }
