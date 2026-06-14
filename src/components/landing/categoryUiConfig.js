@@ -57,16 +57,3 @@ export function normalizeCategoryName(value) {
 export function getCategoryUi(apiCat) {
   return CATEGORY_UI[normalizeCategoryName(apiCat?.name)] || {};
 }
-
-export function displayForCategory(apiCat) {
-  const ui = getCategoryUi(apiCat);
-  const displayName = ui.catname || apiCat?.name || 'Category';
-  const description =
-    ui.description || 'Solve puzzles from this category and test your skills with fun challenges ahead!';
-  return {
-    id: apiCat?._id || null,
-    displayName,
-    description,
-    image: apiCat?.image || ui.image || null,
-  };
-}

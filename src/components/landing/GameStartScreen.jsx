@@ -3,22 +3,18 @@ import { IoIosShuffle } from "react-icons/io";
 
 export function GameStartScreen({
   isOpen,
-  onClose: _onClose,
   onBack,
   onStartPlaying,
-  categoryName = "",
+  category = null,
   isPremiumFlow = false,
   isStarting = false,
-  categoryHeroImage = null,
-  categoryBlurb = null,
 }) {
   if (!isOpen) return null;
 
-  const heroImageSrc = categoryHeroImage || "./landing/lion.png";
-  const cardDescription =
-    categoryBlurb != null && String(categoryBlurb).trim() !== ""
-      ? categoryBlurb
-      : null;
+  console.log("categorycategory",category) 
+
+  const categoryName = String(category?.name || "").trim();
+  const heroImageSrc = category?.image || null;
   const hasNamedCategory = Boolean(categoryName);
   const introText = isPremiumFlow
     ? `Awesome choice! You picked ${categoryName}.`
@@ -97,23 +93,30 @@ export function GameStartScreen({
                   <div className="flex flex-col md:flex-row items-center justify-center pt-10 md:py-[30px] sm:w-auto relative">
                     <div className=" flex items-center justify-center  mb-4 md:mb-0 md:absolute left-0">
                       {/* Top image (outside circle) */}
-                      <div className="absolute md:-top-[100px] sm:-top-[70px] -top-[60px] z-20 md:w-[300px] md:h-[300px] w-[200px] h-[200px] aspect-square overflow-hidden">
-                        <img
-                          src={heroImageSrc}
-                          alt={categoryName || "Category"}
-                          className="md:h-[464px] md:w-[464px] w-full  object-contain "
-                        />
-                      </div>
+                      {/* <div className="absolute md:-top-[100px] sm:-top-[70px] -top-[60px] z-20 md:w-[300px] md:h-[300px] w-[200px] h-[200px] aspect-square overflow-hidden">
+                        {heroImageSrc ? (
+                          <img
+                            src={heroImageSrc}
+                            alt={categoryName || "Category"}
+                            className="md:h-[464px] md:w-[464px] w-full object-contain"
+                          />
+                        ) : null}
+                      </div> */}
 
                       {/* Circle */}
-                      <div className="relative md:w-[300px] md:h-[300px] w-[200px] h-[200px] aspect-square rounded-full border-4 border-blue-500 overflow-hidden z-10 bg-white">
-                        {/* Same image inside circle */}
-                        <img
-                          src={heroImageSrc}
-                          alt={categoryName || "Category"}
-                          className="absolute left-1/2 -translate-x-1/2 -top-[100px]  sm:h-[464px] sm:w-[464px] w-full object-contain"
-                        />
-                      </div>
+ <div className="relative md:w-[300px] md:h-[300px] w-[200px] h-[200px] rounded-full border-4 border-blue-500 overflow-hidden bg-white flex items-center justify-center z-10">
+  {category?.image ? (
+    <img
+      src={`${import.meta.env.VITE_MEDIAURL}/${category.image}`}
+      alt={categoryName || "Category"}
+      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+    />
+  ) : (
+    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#dbeafe] to-[#fde68a] text-[#264DA7] text-5xl font-bold">
+      ?
+    </div>
+  )}
+</div>
                     </div>
                     <div className="absolute left-0 bg-white h-full w-[80px] hidden md:block z-9"/>
 
@@ -124,7 +127,7 @@ export function GameStartScreen({
                           {categoryName || "Random free category"}
                         </h3>
                         <p className="text-white/90 text-[13px] md:text-[16px] leading-relaxed max-h-[100px] overflow-y-auto custom-scrollbar">
-                          {cardDescription || detailText}
+                          {detailText}
                         </p>
                       </div>
                     </div>

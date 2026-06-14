@@ -10,7 +10,7 @@ const EMPTY = {
   revealSequence: '',
   basePoints: 100,
   timeLimitSeconds: 60,
-  isPremium: false,
+  //isPremium: false,
 };
 
 export function PuzzlesPage() {
@@ -78,7 +78,7 @@ export function PuzzlesPage() {
         revealSequence: puzzle.revealSequence.join(','),
         basePoints: puzzle.basePoints,
         timeLimitSeconds: puzzle.timeLimitSeconds,
-        isPremium: puzzle.isPremium,
+       // isPremium: puzzle.isPremium,
       });
     } catch (err) {
       setError(err.message);
@@ -101,7 +101,7 @@ export function PuzzlesPage() {
       revealSequence,
       basePoints: Number(form.basePoints),
       timeLimitSeconds: Number(form.timeLimitSeconds),
-      isPremium: !!form.isPremium,
+      
     };
     try {
       if (editing === 'new') await adminApi.createPuzzle(body);
@@ -265,14 +265,14 @@ export function PuzzlesPage() {
               onChange={(e) => setForm({ ...form, timeLimitSeconds: e.target.value })}
             />
           </label>
-          <label className="flex items-center gap-2">
+          {/* <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={form.isPremium}
               onChange={(e) => setForm({ ...form, isPremium: e.target.checked })}
             />
             Premium
-          </label>
+          </label> */}
           <div className="sm:col-span-3 flex gap-2">
             <button type="submit" className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange">
               Save
@@ -298,7 +298,7 @@ export function PuzzlesPage() {
             <th className="p-3">Answer</th>
             <th className="p-3">Category</th>
             <th className="p-3">Difficulty</th>
-            <th className="p-3">Premium</th>
+           
             <th className="p-3"></th>
           </tr>
         </thead>
@@ -309,7 +309,7 @@ export function PuzzlesPage() {
               <td className="p-3">{r.answer}</td>
               <td className="p-3">{categoryById[r.categoryId]?.name || '—'}</td>
               <td className="p-3">{r.difficulty}</td>
-              <td className="p-3">{r.isPremium ? '★' : ''}</td>
+              
               <td className="p-3 text-right">
                 <button
                   onClick={() => openEdit(r._id)}

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CategorySelection } from "./CategorySelection.jsx";
 import { GameStartScreen } from "./GameStartScreen.jsx";
-import { displayForCategory } from "./categoryUiConfig.js";
 import { api } from "../../api/client";
 import { getUserFriendlyApiMessage } from "../../api/apiErrors";
 import { useAuth } from "../../auth/AuthContext";
@@ -18,10 +17,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
   const [showGameStart, setShowGameStart] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
   const [isPremiumFlow, setIsPremiumFlow] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState("");
-  const [freePreviewImage, setFreePreviewImage] = useState(null);
-  const [freePreviewBlurb, setFreePreviewBlurb] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   /** True when Random was chosen from premium category list — same game-start copy as Free Forever, but Back returns to picker. */
   const [premiumPickerRandomFlow, setPremiumPickerRandomFlow] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -39,10 +35,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       setShowGameStart(false);
       setShowCategorySelection(false);
       setIsPremiumFlow(false);
-      setSelectedCategoryId(null);
-      setSelectedCategoryName("");
-      setFreePreviewImage(null);
-      setFreePreviewBlurb(null);
+      setSelectedCategory(null);
       setPremiumPickerRandomFlow(false);
       setStarting(false);
       setError(null);
@@ -67,8 +60,8 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     setError(null);
     setStarting(true);
     try {
-      const body = selectedCategoryId
-        ? { categoryId: selectedCategoryId }
+      const body = selectedCategory?.id
+        ? { categoryId: selectedCategory.id }
         : {};
       const data = await api.post("/sessions/start", body);
       onClose?.();
@@ -95,11 +88,11 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       throw new Error("no_categories");
     }
     const raw = pool[Math.floor(Math.random() * pool.length)];
-    const d = displayForCategory(raw);
-    setSelectedCategoryId(null);
-    setSelectedCategoryName(d.displayName);
-    setFreePreviewImage(d.image || "/semistar.png");
-    setFreePreviewBlurb(d.description);
+    setSelectedCategory({
+      id: null,
+      name: raw?.name || "Random free category",
+      image: raw?.image || null,
+    });
   }
 
   async function openFreeGameStart() {
@@ -143,7 +136,6 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     return (
       <CategorySelection
         isOpen={showCategorySelection}
-        onClose={onClose}
         onBack={() => setShowCategorySelection(false)}
         onSelectCategory={async (category) => {
           if (category.isRandom) {
@@ -166,10 +158,11 @@ export function PlayExperienceModal({ isOpen, onClose }) {
             return;
           }
           setPremiumPickerRandomFlow(false);
-          setSelectedCategoryId(category.id);
-          setSelectedCategoryName(category.name || "Selected Category");
-          setFreePreviewImage(category.image || null);
-          setFreePreviewBlurb(category.description || null);
+          setSelectedCategory({
+            id: category.id,
+            name: category.name || "Selected Category",
+            image: category.image || null,
+          });
           setIsPremiumFlow(true);
           setShowCategorySelection(false);
           setShowGameStart(true);
@@ -183,7 +176,6 @@ export function PlayExperienceModal({ isOpen, onClose }) {
       <>
         <GameStartScreen
           isOpen={showGameStart}
-          onClose={onClose}
           onBack={() => {
             if (isPremiumFlow) {
               setShowGameStart(false);
@@ -199,11 +191,9 @@ export function PlayExperienceModal({ isOpen, onClose }) {
             setShowGameStart(false);
           }}
           onStartPlaying={startSession}
-          categoryName={selectedCategoryName}
+          category={selectedCategory}
           isPremiumFlow={isPremiumFlow}
           isStarting={starting}
-          categoryHeroImage={freePreviewImage}
-          categoryBlurb={freePreviewBlurb}
         />
         {error && (
           <div className="fixed bottom-6 left-1/2 z-modal-top max-w-[min(100vw-2rem,28rem)] -translate-x-1/2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-600 shadow-lg">

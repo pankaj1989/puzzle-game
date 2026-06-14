@@ -5,49 +5,96 @@ import { api } from "../../api/client";
 import { getUserFriendlyApiMessage } from "../../api/apiErrors";
 import { getCategoryUi, normalizeCategoryName } from "./categoryUiConfig.js";
 
-function CategoryHeroArt({ category }) {
+function CategoryCard({ category, onClick }) {
   const [imgFailed, setImgFailed] = useState(false);
-
-  if (category.isRandom) {
-    return (
-      <div className="flex h-full min-h-[200px] w-full items-center justify-center relative z-10">
-        <span
-          className="font-black text-white leading-none drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
-          style={{ fontSize: "clamp(72px, 18vw, 120px)" }}
-        >
-          ?
-        </span>
-      </div>
-    );
-  }
-
-  if (!category.image || imgFailed) {
-    return (
-      <div className="flex h-full min-h-[200px] w-full items-center justify-center relative z-10">
-        <IoIosShuffle
-          className="size-[88px] text-white/90 drop-shadow-lg"
-          aria-hidden
-        />
-      </div>
-    );
-  }
+  const showImage = !category.isRandom && category.image && !imgFailed;
 
   return (
-    <img
-      src={category.image}
-      alt=""
-      className="relative z-[1] max-h-[260px] w-auto max-w-[92%] object-contain object-bottom"
-      onError={() => setImgFailed(true)}
-    />
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2"
+    >
+      <div className="overflow-hidden rounded-[20px] border border-white/5 shadow-[0_4px_24px_rgba(15,23,42,0.12)] transition-all duration-300 group-hover:shadow-[0_12px_40px_rgba(15,23,42,0.2)] group-hover:-translate-y-1 active:translate-y-0 active:shadow-[0_4px_16px_rgba(15,23,42,0.1)]">
+        {/* Image / Hero area — fixed 220px height, image fills it fully */}
+        <div
+          className="relative flex items-center justify-center overflow-hidden"
+          style={{ background: category.bgColor, height: "220px" }}
+        >
+          {/* Watermark text */}
+          <span
+            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center font-black uppercase leading-none text-white/[0.07]"
+            style={{
+              fontSize:
+                category.watermarkText.length > 9
+                  ? "clamp(60px, 14vw, 88px)"
+                  : category.watermarkText.length > 6
+                  ? "clamp(72px, 16vw, 104px)"
+                  : "clamp(84px, 18vw, 120px)",
+              fontFamily: "Inter, system-ui, sans-serif",
+            }}
+            aria-hidden
+          >
+            {category.watermarkText}
+          </span>
+
+          {/* Category image — fixed 160×160, covers uniformly */}
+          {showImage ? (
+            <img
+              src={`${import.meta.env.VITE_MEDIAURL}/${category.image}`}
+              alt=""
+              className="relative z-10 drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+              style={{ width: "160px", height: "160px", objectFit: "cover", borderRadius: "12px" }}
+              onError={() => setImgFailed(true)}
+            />
+          ) : category.isRandom ? (
+            <span
+              className="relative z-10 font-black text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+              style={{ fontSize: "clamp(72px, 16vw, 100px)", lineHeight: 1 }}
+            >
+              ?
+            </span>
+          ) : (
+            <IoIosShuffle
+              className="relative z-10 size-20 text-white/80 drop-shadow-lg"
+              aria-hidden
+            />
+          )}
+        </div>
+
+        {/* Info footer */}
+        <div
+          className="px-5 py-4"
+          style={{
+            background:
+              "radial-gradient(120% 120% at 50% 0%, #16161a 0%, #0a0a0c 60%, #000 100%)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate font-sans text-[1.15rem] font-bold leading-snug tracking-tight text-white sm:text-[1.3rem]">
+                {category.catname}
+              </h3>
+              <p className="mt-0.5 text-[13px] leading-relaxed text-white/60 line-clamp-2">
+                {category.description}
+              </p>
+            </div>
+            <span className="mt-0.5 flex shrink-0 size-8 items-center justify-center rounded-full border border-white/20 bg-white/5 transition-all group-hover:border-white/50 group-hover:bg-white/10">
+              <IoArrowForward className="size-4 text-white" aria-hidden />
+            </span>
+          </div>
+          <div className="mt-3 border-t border-white/10 pt-2.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">
+              Tap to play
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }
 
-export function CategorySelection({
-  isOpen,
-  onClose: _onClose,
-  onBack,
-  onSelectCategory,
-}) {
+export function CategorySelection({ isOpen, onBack, onSelectCategory }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -84,14 +131,13 @@ export function CategorySelection({
       return {
         id: c._id || idx,
         categoryId: c._id || null,
-        name: c.name,
+        rawName: c.name,
         catname: label,
         description: ui.description || "Solve puzzles from this category.",
         image: rawImage,
         bgColor:
           ui.bgColor ||
           "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #1e3a5f 0%, #0f172a 100%)",
-        watermarkColor: ui.watermarkColor || "rgba(255, 255, 255, 0.14)",
         watermarkText: ui.watermarkText || label.split(/\s+/)[0].toUpperCase(),
         isRandom,
       };
@@ -106,6 +152,7 @@ export function CategorySelection({
 
   return (
     <>
+      {/* Page background */}
       <div
         className="fixed inset-0 z-modal-backdrop"
         style={{
@@ -114,7 +161,8 @@ export function CategorySelection({
         }}
       />
 
-      <header className="fixed top-0 left-0 right-0 z-modal-nested flex items-center justify-between  px-4 py-4 sm:px-8 sm:py-5">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-modal-nested flex items-center justify-between px-4 py-4 sm:px-8 sm:py-5">
         <button
           type="button"
           onClick={() => onBack?.()}
@@ -126,7 +174,7 @@ export function CategorySelection({
         </button>
 
         <div
-          className="flex items-center gap-2 rounded-full border border-[#f0c86bc7]  px-4 py-2.5 text-[13px] font-semibold text-[#7B3306] shadow-sm sm:text-[14px]"
+          className="flex items-center gap-2 rounded-full border border-[#f0c86bc7] px-4 py-2.5 text-[13px] font-semibold text-[#7B3306] shadow-sm sm:text-[14px]"
           style={{ boxShadow: "0px 0px 6px -4px #FEE6854D" }}
         >
           <img src="/crown.svg" alt="" className="size-4 shrink-0" />
@@ -134,8 +182,10 @@ export function CategorySelection({
         </div>
       </header>
 
-      <main className="fixed inset-0 z-modal flex flex-col overflow-y-auto px-4 pb-12 pt-[5.25rem] sm:px-6 sm:pt-24">
-        <div className="mx-auto w-full max-w-[1200px] flex-1">
+      {/* Main content */}
+      <main className="fixed inset-0 z-modal flex flex-col overflow-y-auto px-4 pb-16 pt-[5.25rem] sm:px-6 sm:pt-24">
+        <div className="mx-auto w-full max-w-[1100px] flex-1">
+          {/* Page heading */}
           <div className="mb-10 text-center sm:mb-12">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-navy-dark px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
               <img src="/star.svg" alt="" className="size-3" />
@@ -147,102 +197,43 @@ export function CategorySelection({
             <p className="mx-auto mt-3 max-w-2xl text-[15px] leading-relaxed text-gray-600 sm:text-[17px]">
               Pick any category you like. You have full access to all puzzles.
             </p>
-            <h2 className="mt-10 text-[13px] font-bold uppercase tracking-[0.2em] text-navy-dark/70 sm:mt-12">
-              All categories
-            </h2>
+
+            <div className="mt-10 flex items-center gap-4 sm:mt-12">
+              <span className="h-px flex-1 bg-navy-dark/10" />
+              <h2 className="text-[12px] font-bold uppercase tracking-[0.2em] text-navy-dark/50">
+                All categories
+              </h2>
+              <span className="h-px flex-1 bg-navy-dark/10" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-14 xl:grid-cols-3">
+          {/* Grid */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
             {loading && (
-              <p className="col-span-full py-12 text-center text-text-muted">
+              <p className="col-span-full py-16 text-center text-gray-400">
                 Loading categories…
               </p>
             )}
             {error && (
-              <p className="col-span-full py-12 text-center text-red-600">
+              <p className="col-span-full py-16 text-center text-red-600">
                 {error}
               </p>
             )}
             {!loading &&
               !error &&
               viewCategories.map((category) => (
-                <button
+                <CategoryCard
                   key={category.id}
-                  type="button"
+                  category={category}
                   onClick={() =>
                     onSelectCategory?.({
                       id: category.categoryId,
-                      name: category.catname,
+                      name: category.rawName,
                       image: category.isRandom ? null : category.image,
-                      description: category.description,
                       isRandom: category.isRandom,
                     })
                   }
-                  className="group w-full text-left transition-transform duration-200 hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 relative h-[320px] flex flex-col justify-end"
-                >
-                  <div className="absolute top-0 w-full flex justify-center ">
-                    <CategoryHeroArt category={category} />
-                  </div>
-
-                  <div
-                    className="overflow-hidden rounded-t-[28px]  bg-white shadow-[0_12px_40px_rgba(15,23,42,0.1)] transition-shadow duration-200 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)]  min-h-[200px] -z-10 absolute bottom-22 w-full"
-                    style={{ background: category.bgColor }}
-                  />
-                  {/* <div
-                    className="overflow-hidden rounded-[28px] border border-gray-200/90 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.1)] transition-shadow duration-200 group-hover:shadow-[0_20px_50px_rgba(15,23,42,0.14)] "
-                    style={{ background: category.bgColor }}
-                  > */}
-                  <div
-                    className="relative flex min-h-[220px]  justify-center px-2 pt-10 pb-2 sm:min-h-[180px] sm:px-4"
-                    // style={{ background: category.bgColor }}
-                  >
-                    {/* <div className="pointer-events-none absolute inset-0 flex items-center justify-center"> */}
-                    <span
-                      className="pointer-events-none select-none text-center font-black uppercase leading-none text-white/9 mt-10 md:mt-2"
-                      style={{
-                        fontFamily: "Inter, system-ui, sans-serif",
-                        fontSize:
-                          category.watermarkText.length > 9
-                            ? "clamp(36px, 9vw, 48px)"
-                            : category.watermarkText.length > 6 
-                              ? "clamp(44px, 11vw, 72px)"
-                              : "clamp(52px, 13vw, 76px)",
-                      }}
-                    >
-                      {category.watermarkText}
-                    </span>
-                    {/* </div> */}
-                  </div>
-
-                  <div
-                    className="border-t border-white/10 px-4 py-1 text-white text-center rounded-[28px] z-100"
-                    style={{
-                      background:
-                        "radial-gradient(120% 120% at 50% 0%, #1a1a1f 0%, #0a0a0c 55%, #000 100%)",
-                    }}
-                  >
-                    <div className="text-center pt-3">
-                      <h3 className="font-sans text-[1.35rem] font-bold leading-snug tracking-tight sm:text-[1.8rem]">
-                        {category.catname}
-                      </h3>
-                      <p className="text-[13px] leading-relaxed text-white/75 sm:text-[14px]">
-                        {category.description}
-                      </p>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between border-t border-white/50 pt-2 pb-1">
-                      <span className="text-[12px] font-medium text-white">
-                        Tap to play
-                      </span>
-                      <span className="flex size-6 items-center justify-center rounded-full border border-white/35 bg-white/5 transition-colors group-hover:border-white/60 group-hover:bg-white/10">
-                        <IoArrowForward
-                          className="size-4 text-white"
-                          aria-hidden
-                        />
-                      </span>
-                    </div>
-                  </div>
-                  {/* </div> */}
-                </button>
+                />
               ))}
           </div>
         </div>

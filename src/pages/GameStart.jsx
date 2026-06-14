@@ -9,8 +9,8 @@ export function GameStart() {
   const navigate = useNavigate();
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
-  const categoryId = location.state?.categoryId || null;
-  const categoryName = location.state?.categoryName || '';
+  const selectedCategory = location.state?.category || null;
+  const categoryId = selectedCategory?.id || location.state?.categoryId || null;
 
   async function startSession() {
     setError(null);
@@ -37,7 +37,7 @@ export function GameStart() {
         isOpen
         onBack={() => navigate('/')}
         onStartPlaying={startSession}
-        categoryName={categoryName}
+        category={selectedCategory}
         isPremiumFlow={Boolean(categoryId)}
         isStarting={starting}
       />
