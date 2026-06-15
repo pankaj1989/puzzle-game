@@ -59,7 +59,7 @@ async function startSession(req, res) {
     if (!requestedCategory) {
       throw new HttpError(404, 'Category not found', 'CATEGORY_NOT_FOUND');
     }
-    if (isFree) {
+    if (isFree && requestedCategory.isPremium) {
       throw new HttpError(403, 'Premium plan required to choose this category', 'PLAN_REQUIRED');
     }
   }

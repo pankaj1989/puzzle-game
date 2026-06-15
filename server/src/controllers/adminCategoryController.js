@@ -5,20 +5,18 @@ const { serializeCategory, toStoredImagePath } = require('../services/categorySe
 
 async function list(req, res) {
   const categories = await Category.find().sort({ name: 1 });
-  res.json({ categories: categories });
+  res.json({ categories });
 }
 
 async function create(req, res) {
   try {
-    
     const category = await Category.create({
-      ...req.body,
+      name: req.body.name,
+      isPremium: req.body.isPremium,
       image: req.file ? toStoredImagePath(req.file) : null,
     });
     res.status(201).json({ category: serializeCategory(req, category) });
   } catch (err) {
-
-    console.log("zdcvcx",err)
     if (err.code === 11000) throw new HttpError(409, 'Category already exists', 'CATEGORY_EXISTS');
     throw err;
   }
@@ -27,7 +25,8 @@ async function create(req, res) {
 async function update(req, res) {
   const cat = await Category.findById(req.params.id);
   if (!cat) throw new HttpError(404, 'Not found', 'NOT_FOUND');
-  Object.assign(cat, req.body);
+  if (req.body.name !== undefined) cat.name = req.body.name;
+  if (req.body.isPremium !== undefined) cat.isPremium = req.body.isPremium;
   if (req.file) {
     cat.image = toStoredImagePath(req.file);
   }

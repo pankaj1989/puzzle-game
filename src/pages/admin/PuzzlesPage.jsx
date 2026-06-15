@@ -66,6 +66,10 @@ export function PuzzlesPage() {
 
   async function openEdit(id) {
     setError(null);
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
     try {
       const { puzzle } = await adminApi.getPuzzle(id);
       setEditing(id);

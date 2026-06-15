@@ -11,10 +11,9 @@ export function GameStartScreen({
 }) {
   if (!isOpen) return null;
 
-  console.log("categorycategory",category) 
 
   const categoryName = String(category?.name || "").trim();
-  const heroImageSrc = category?.image || null;
+  // const heroImageSrc = category?.image || null;
   const hasNamedCategory = Boolean(categoryName);
   const introText = isPremiumFlow
     ? `Awesome choice! You picked ${categoryName}.`
@@ -104,21 +103,21 @@ export function GameStartScreen({
                       </div> */}
 
                       {/* Circle */}
- <div className="relative md:w-[300px] md:h-[300px] w-[200px] h-[200px] rounded-full border-4 border-blue-500 overflow-hidden bg-white flex items-center justify-center z-10">
-  {category?.image ? (
-    <img
-      src={`${import.meta.env.VITE_MEDIAURL}/${category.image}`}
-      alt={categoryName || "Category"}
-      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-    />
-  ) : (
-    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#dbeafe] to-[#fde68a] text-[#264DA7] text-5xl font-bold">
-      ?
-    </div>
-  )}
-</div>
+                      <div className="relative md:w-[300px] md:h-[300px] w-[200px] h-[200px] rounded-full border-4 border-blue-500 overflow-hidden bg-white flex items-center justify-center z-10">
+                        {category?.image ? (
+                          <img
+                            src={`${import.meta.env.VITE_MEDIAURL}/${category.image}`}
+                            alt={categoryName || "Category"}
+                            className="w-auto !h-full object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#dbeafe] to-[#fde68a] text-[#264DA7] text-5xl font-bold">
+                            ?
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="absolute left-0 bg-white h-full w-[80px] hidden md:block z-9"/>
+                    <div className="absolute left-0 bg-white h-full w-[80px] hidden md:block z-9" />
 
                     <div className="bg-[#264DA7] text-white rounded-[20px] sm:rounded-[25px] p-4 md:p-6  shadow-[0_4px_0_0_#E17100] w-full flex items-center justify-between md:h-[228px] relative">
                       <div className="hidden md:block sm:w-[50%]"></div>

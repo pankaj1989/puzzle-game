@@ -8,6 +8,7 @@ function serializeCategory(req, category) {
   return {
     _id: category._id,
     name: category.name,
+    slug: category.slug,
     image: buildPublicUrl(req, category.image || null),
     isPremium: Boolean(category.isPremium),
     createdAt: category.createdAt,

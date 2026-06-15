@@ -11,6 +11,8 @@ async function run() {
 
   for (const cat of seedData.categories) {
     await Category.updateOne({ name: cat.name }, { $set: cat }, { upsert: true });
+    const doc = await Category.findOne({ name: cat.name });
+    if (doc && !doc.slug) await doc.save();
   }
   console.log(`Upserted ${seedData.categories.length} categories`);
 

@@ -89,7 +89,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     }
     const raw = pool[Math.floor(Math.random() * pool.length)];
     setSelectedCategory({
-      id: null,
+      id: raw._id,
       name: raw?.name || "Random free category",
       image: raw?.image || null,
     });

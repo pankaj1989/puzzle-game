@@ -3,7 +3,22 @@ import { IoIosShuffle } from "react-icons/io";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../../api/client";
 import { getUserFriendlyApiMessage } from "../../api/apiErrors";
-import { getCategoryUi, normalizeCategoryName } from "./categoryUiConfig.js";
+import { getCategoryUi, normalizeCategoryName, CATEGORY_UI } from "./categoryUiConfig.js";
+
+function buildRandomCategoryCard() {
+  const ui = CATEGORY_UI.random;
+  return {
+    id: "random",
+    categoryId: null,
+    rawName: "Random",
+    catname: ui.catname,
+    description: ui.description,
+    image: null,
+    bgColor: ui.bgColor,
+    watermarkText: ui.watermarkText || "RANDOM",
+    isRandom: true,
+  };
+}
 
 function CategoryCard({ category, onClick }) {
   const [imgFailed, setImgFailed] = useState(false);
@@ -29,8 +44,8 @@ function CategoryCard({ category, onClick }) {
                 category.watermarkText.length > 9
                   ? "clamp(60px, 14vw, 88px)"
                   : category.watermarkText.length > 6
-                  ? "clamp(72px, 16vw, 104px)"
-                  : "clamp(84px, 18vw, 120px)",
+                    ? "clamp(72px, 16vw, 104px)"
+                    : "clamp(84px, 18vw, 120px)",
               fontFamily: "Inter, system-ui, sans-serif",
             }}
             aria-hidden
@@ -43,8 +58,7 @@ function CategoryCard({ category, onClick }) {
             <img
               src={`${import.meta.env.VITE_MEDIAURL}/${category.image}`}
               alt=""
-              className="relative z-10 drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-              style={{ width: "160px", height: "160px", objectFit: "cover", borderRadius: "12px" }}
+              className="relative z-10 drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)] !h-full object-cover"
               onError={() => setImgFailed(true)}
             />
           ) : category.isRandom ? (
@@ -122,30 +136,34 @@ export function CategorySelection({ isOpen, onBack, onSelectCategory }) {
   }, [isOpen]);
 
   const viewCategories = useMemo(() => {
-    const items = categories.map((c, idx) => {
-      const ui = getCategoryUi(c);
-      const normalizedName = normalizeCategoryName(c.name);
-      const isRandom = Boolean(ui.isRandom) || normalizedName === "random";
-      const rawImage = isRandom ? null : c.image || ui.image || null;
-      const label = ui.catname || c.name;
-      return {
-        id: c._id || idx,
-        categoryId: c._id || null,
-        rawName: c.name,
-        catname: label,
-        description: ui.description || "Solve puzzles from this category.",
-        image: rawImage,
-        bgColor:
-          ui.bgColor ||
-          "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #1e3a5f 0%, #0f172a 100%)",
-        watermarkText: ui.watermarkText || label.split(/\s+/)[0].toUpperCase(),
-        isRandom,
-      };
-    });
-    return items.sort((a, b) => {
-      if (a.isRandom === b.isRandom) return 0;
-      return a.isRandom ? 1 : -1;
-    });
+    const items = categories
+      .filter((c) => {
+        const ui = getCategoryUi(c);
+        const normalizedName = normalizeCategoryName(c.name);
+        return !(Boolean(ui.isRandom) || normalizedName === "random");
+      })
+      .map((c, idx) => {
+        const ui = getCategoryUi(c);
+        const label = ui.catname || c.name;
+        return {
+          id: c._id || idx,
+          categoryId: c._id || null,
+          rawName: c.name,
+          catname: label,
+          description: ui.description || "Solve puzzles from this category.",
+          image: c.image || ui.image || null,
+          bgColor:
+            ui.bgColor ||
+            "radial-gradient(52.35% 52.35% at 47.26% 47.65%, #1e3a5f 0%, #0f172a 100%)",
+          watermarkText: ui.watermarkText || label.split(/\s+/)[0].toUpperCase(),
+          isRandom: false,
+        };
+      });
+
+    if (items.length >= 4) {
+      return [...items, buildRandomCategoryCard()];
+    }
+    return items;
   }, [categories]);
 
   if (!isOpen) return null;
@@ -219,22 +237,24 @@ export function CategorySelection({ isOpen, onBack, onSelectCategory }) {
                 {error}
               </p>
             )}
-            {!loading &&
-              !error &&
-              viewCategories.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onClick={() =>
-                    onSelectCategory?.({
-                      id: category.categoryId,
-                      name: category.rawName,
-                      image: category.isRandom ? null : category.image,
-                      isRandom: category.isRandom,
-                    })
-                  }
-                />
-              ))}
+            {!loading && !error && (
+              <>
+                {viewCategories.map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    onClick={() =>
+                      onSelectCategory?.({
+                        id: category.categoryId,
+                        name: category.rawName,
+                        image: category.isRandom ? null : category.image,
+                        isRandom: category.isRandom,
+                      })
+                    }
+                  />
+                ))}
+              </>
+            )}
           </div>
         </div>
       </main>
