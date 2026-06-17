@@ -8,7 +8,6 @@ const createPuzzleSchema = z.object({
   categoryId: mongoId,
   difficulty: z.enum(['easy', 'medium', 'hard']),
   clue: z.string().min(1).max(500),
-  revealSequence: z.array(z.number().int().min(0)).min(1),
   basePoints: z.number().int().min(0).optional(),
   timeLimitSeconds: z.number().int().min(5).optional(),
   isPremium: z.boolean().optional(),

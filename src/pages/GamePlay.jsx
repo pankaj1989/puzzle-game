@@ -106,7 +106,7 @@ function GameScreen({ initialSession, puzzle }) {
   const navigate = useNavigate();
   const wordLengths = useMemo(() => {
     if (puzzle.wordLengths?.length) return puzzle.wordLengths;
-    const len = puzzle.answerLength ?? puzzle.revealSequence?.length ?? 0;
+    const len = puzzle.answerLength ?? 0;
     return len > 0 ? [len] : [];
   }, [puzzle]);
   const [session, setSession] = useState(initialSession);

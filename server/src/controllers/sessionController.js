@@ -16,8 +16,7 @@ function serializePuzzle(puzzle) {
     categoryId: puzzle.categoryId,
     difficulty: puzzle.difficulty,
     clue: puzzle.clue,
-    revealSequence: puzzle.revealSequence,
-    answerLength: puzzle.revealSequence.length,
+    answerLength: puzzle.answer.length,
     wordLengths: puzzle.answer.split(' ').map((w) => w.length),
     basePoints: puzzle.basePoints,
     timeLimitSeconds: puzzle.timeLimitSeconds,
@@ -161,11 +160,11 @@ async function requestHint(req, res) {
   const puzzle = await Puzzle.findById(session.puzzleId);
   if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
 
-  if (session.hintsUsed >= puzzle.revealSequence.length) {
+  if (session.hintsUsed >= puzzle.answer.length) {
     throw new HttpError(409, 'No more hints available', 'NO_MORE_HINTS');
   }
 
-  const index = puzzle.revealSequence[session.hintsUsed];
+  const index = session.hintsUsed;
   const letter = puzzle.answer.charAt(index).toUpperCase();
 
   session.hintsUsed += 1;
