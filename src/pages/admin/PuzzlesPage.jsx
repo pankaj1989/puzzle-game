@@ -7,7 +7,6 @@ const EMPTY = {
   categoryId: '',
   difficulty: 'easy',
   clue: '',
-  revealSequence: '',
   basePoints: 100,
   timeLimitSeconds: 60,
   //isPremium: false,
@@ -79,7 +78,6 @@ export function PuzzlesPage() {
         categoryId: String(puzzle.categoryId),
         difficulty: puzzle.difficulty,
         clue: puzzle.clue,
-        revealSequence: puzzle.revealSequence.join(','),
         basePoints: puzzle.basePoints,
         timeLimitSeconds: puzzle.timeLimitSeconds,
        // isPremium: puzzle.isPremium,
@@ -92,17 +90,12 @@ export function PuzzlesPage() {
   async function save(e) {
     e.preventDefault();
     setError(null);
-    const revealSequence = form.revealSequence
-      .split(',')
-      .map((s) => Number(s.trim()))
-      .filter((n) => !Number.isNaN(n));
     const body = {
       plate: form.plate.trim(),
       answer: form.answer.trim(),
       categoryId: form.categoryId,
       difficulty: form.difficulty,
       clue: form.clue.trim(),
-      revealSequence,
       basePoints: Number(form.basePoints),
       timeLimitSeconds: Number(form.timeLimitSeconds),
       
@@ -239,16 +232,6 @@ export function PuzzlesPage() {
               value={form.clue}
               onChange={(e) => setForm({ ...form, clue: e.target.value })}
               required
-            />
-          </label>
-          <label className="sm:col-span-3">
-            Reveal sequence (comma-separated indices)
-            <input
-              className="w-full border rounded px-2 py-1 font-mono"
-              value={form.revealSequence}
-              onChange={(e) => setForm({ ...form, revealSequence: e.target.value })}
-              required
-              placeholder="0,1,2,3"
             />
           </label>
           <label>
