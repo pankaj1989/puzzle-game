@@ -4,8 +4,6 @@ import { IoArrowBack } from 'react-icons/io5';
 import { api } from '../api/client';
 import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
-import { SegmentedAnswerInput } from '../components/game/SegmentedAnswerInput';
-import { cellsToGuess, clearUnrevealedCells, initCells } from '../components/game/answerSlots';
 import AdSlot from '../ads/AdSlot';
 
 export function GamePlay() {
@@ -104,13 +102,8 @@ export function GamePlay() {
 
 function GameScreen({ initialSession, puzzle }) {
   const navigate = useNavigate();
-  const wordLengths = useMemo(() => {
-    if (puzzle.wordLengths?.length) return puzzle.wordLengths;
-    const len = puzzle.answerLength ?? puzzle.revealSequence?.length ?? 0;
-    return len > 0 ? [len] : [];
-  }, [puzzle]);
   const [session, setSession] = useState(initialSession);
-  const [cells, setCells] = useState(() => initCells(wordLengths));
+  const [guess, setGuess] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -130,10 +123,9 @@ function GameScreen({ initialSession, puzzle }) {
   const remaining = Math.max(0, totalSec - elapsedSec);
   const timeUp = remaining === 0 && !result;
 
-  async function submitGuess(nextCells) {
-    if (submitting || result) return;
-    const guess = cellsToGuess(nextCells ?? cells, wordLengths);
-    if (!guess.trim()) return;
+  async function submitGuess(e) {
+    e?.preventDefault();
+    if (submitting || result || !guess.trim()) return;
     setError(null);
     setSubmitting(true);
     try {
@@ -143,7 +135,7 @@ function GameScreen({ initialSession, puzzle }) {
         setResult({ solved: true, score: data.score, correctAnswer: data.correctAnswer });
       } else {
         setError('Not quite — try again.');
-        setCells((prev) => clearUnrevealedCells(prev, {}, wordLengths));
+        setGuess('');
       }
     } catch (err) {
       setError(getUserFriendlyApiMessage(err));
@@ -212,12 +204,12 @@ function GameScreen({ initialSession, puzzle }) {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8">
+      <div className="max-w-5xl mx-auto flex flex-col gap-6 sm:gap-6 h-full">
         {/* Puzzle plate + clue */}
-        <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 sm:gap-6">
-          <div className="w-full md:w-[55%] flex flex-col border-8 sm:border-14 border-gray-100 rounded-[24px] sm:rounded-[62px] bg-white overflow-hidden shadow-lg">
+        <div className="min-h-[330px] flex flex-col md:flex-row items-stretch justify-center gap-4 sm:gap-6">
+          <div className="w-full md:w-[55%] flex flex-col border-8 sm:border-14 border-gray-100 rounded-[24px] sm:rounded-[62px] bg-white overflow-hidden shadow-lg h-inherit">
             <img src="/gamebase.png" alt="" className="w-full" />
-            <div className="flex bg-white items-center justify-center px-3 py-4 sm:py-1 min-h-[80px] sm:min-h-[100px]">
+            <div className="flex bg-white items-center justify-center px-3 py-4 sm:py-1 h-full min-h-[100px] smd:min-h-[calc(100%-114px)]">
               <h2
                 className="uppercase text-center text-[#073165]"
                 style={{
@@ -234,7 +226,7 @@ function GameScreen({ initialSession, puzzle }) {
             <img src="/gamebase2.png" alt="" className="w-full" />
           </div>
 
-          <div className="w-full md:w-[45%] flex flex-col bg-[#032563] border-8 sm:border-14 border-[#264DA7] rounded-[20px] sm:rounded-[62px] shadow-lg text-white min-h-[160px]">
+          <div className="w-full md:w-[45%] flex flex-col bg-[#032563] border-8 sm:border-14 border-[#264DA7] rounded-[20px] sm:rounded-[62px] shadow-lg text-white min-h-[180px] h-inherit">
             <p className="text-[#FE9A00] font-bold text-2xl sm:text-[34px] text-center pt-4 sm:pt-2 ">Clue</p>
             <p className="text-white px-4 sm:px-6 text-base sm:text-[24px] text-center mt-2 flex items-center justify-center leading-snug">
               {puzzle.clue}
@@ -245,25 +237,33 @@ function GameScreen({ initialSession, puzzle }) {
           </div>
         </div>
 
-        {/* Answer plate with segmented inputs */}
+        {/* Answer plate */}
         <div className="w-full">
           <div className="w-full border-8 sm:border-14 border-[#264DA7] rounded-[24px] sm:rounded-[62px] bg-white overflow-hidden shadow-xl">
             <img src="/gamebase.png" alt="" className="w-full" />
-            <div className="bg-white px-2 sm:px-4 py-6 sm:py-10">
-              <SegmentedAnswerInput
-                wordLengths={wordLengths}
-                cells={cells}
-                onChange={setCells}
+            <form
+              onSubmit={submitGuess}
+              className="bg-white px-4 sm:px-8 pt-8  pb-2 sm:pb-4 sm:pt-10"
+            >
+              <input
+                type="text"
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
                 disabled={submitting}
-                onSubmit={submitGuess}
+                autoComplete="off"
+                autoCapitalize="off"
+                autoFocus
+                placeholder="Type your answer"
+                aria-label="Your answer"
+                className="answer-input w-full max-w-2xl mx-auto block"
               />
               <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#6a7282]">
-                {submitting ? 'Checking…' : 'Type your answer'}
+                {submitting ? 'Checking…' : 'Press Enter to submit'}
               </p>
               {error && (
                 <p className="mt-3 text-center text-sm text-red-600">{error}</p>
               )}
-            </div>
+            </form>
             <img src="/gamebase2.png" alt="" className="w-full" />
           </div>
         </div>

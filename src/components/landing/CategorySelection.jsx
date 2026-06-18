@@ -38,14 +38,14 @@ function CategoryCard({ category, onClick }) {
         >
           {/* Watermark text */}
           <span
-            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center font-black uppercase leading-none text-white/[0.07]"
+            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center font-black uppercase leading-none text-white/[0.07] max-w-[99%] mx-auto overflow-hidden"
             style={{
               fontSize:
                 category.watermarkText.length > 9
-                  ? "clamp(60px, 14vw, 88px)"
+                  ? "clamp(20px, 14vw, 45px)"
                   : category.watermarkText.length > 6
-                    ? "clamp(72px, 16vw, 104px)"
-                    : "clamp(84px, 18vw, 120px)",
+                    ? "clamp(72px, 16vw, 70px)"
+                    : "clamp(84px, 18vw, 90px)",
               fontFamily: "Inter, system-ui, sans-serif",
             }}
             aria-hidden
