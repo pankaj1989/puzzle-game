@@ -105,7 +105,7 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
               <button
                 type="button"
                 onClick={logout}
-                className="text-sm text-brand-orange-dark underline hover:no-underline"
+                className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-transparent min-w-[160px] px-[28px] py-[21px] text-[20px] no-underline transition border-3 border-[#E17100] group cursor-pointer leading-none text-brand-orange-dark hover:text-white hover:bg-brand-orange-dark"
               >
                 Sign out
               </button>
@@ -233,7 +233,7 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
                     setIsMenuOpen(false);
                     logout();
                   }}
-                  className="block w-full text-center text-sm text-brand-orange-dark underline"
+                 className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-transparent w-full max-w-[520px] !mx-auto px-[28px] py-4 text-md font-semibold no-underline transition border-2 border-[#E17100] group cursor-pointer leading-none text-brand-orange-dark hover:text-white hover:bg-brand-orange-dark"
                 >
                   Sign out
                 </button>
