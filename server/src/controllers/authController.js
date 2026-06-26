@@ -4,7 +4,7 @@ const MagicLinkToken = require('../models/MagicLinkToken');
 const env = require('../config/env');
 const emailService = require('../services/emailService');
 const { hashPassword, verifyPassword, DUMMY_HASH } = require('../services/passwordService');
-const { signAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
+const { signAccessToken, signGuestAccessToken, issueRefreshToken, rotateRefreshToken, revokeRefreshToken } = require('../services/tokenService');
 const googleAuthService = require('../services/googleAuthService');
 const { promoteIfAdminEmail } = require('../services/adminPromoter');
 const { HttpError } = require('../middleware/errorHandler');
@@ -140,4 +140,10 @@ async function me(req, res) {
   res.json({ user: req.user });
 }
 
-module.exports = { signup, login, refresh, logout, magicRequest, magicVerify, google, me };
+async function guest(req, res) {
+  const guestId = req.body.guestId || crypto.randomUUID();
+  const accessToken = signGuestAccessToken(guestId);
+  res.status(201).json({ accessToken, guestId });
+}
+
+module.exports = { signup, login, refresh, logout, magicRequest, magicVerify, google, me, guest };

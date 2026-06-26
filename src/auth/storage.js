@@ -1,6 +1,25 @@
 const ACCESS_KEY = 'bs.accessToken';
 const REFRESH_KEY = 'bs.refreshToken';
 const USER_KEY = 'bs.user';
+const GUEST_ID_KEY = 'bs.guestId';
+const GUEST_ACCESS_KEY = 'bs.guestAccessToken';
+
+export const guestStorage = {
+  getId() {
+    return localStorage.getItem(GUEST_ID_KEY);
+  },
+  getAccess() {
+    return localStorage.getItem(GUEST_ACCESS_KEY);
+  },
+  set({ guestId, accessToken }) {
+    if (guestId) localStorage.setItem(GUEST_ID_KEY, guestId);
+    if (accessToken) localStorage.setItem(GUEST_ACCESS_KEY, accessToken);
+  },
+  clear() {
+    localStorage.removeItem(GUEST_ID_KEY);
+    localStorage.removeItem(GUEST_ACCESS_KEY);
+  },
+};
 
 export const tokenStorage = {
   getAccess() {
@@ -17,6 +36,7 @@ export const tokenStorage = {
     localStorage.removeItem(ACCESS_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
+    guestStorage.clear();
   },
 };
 

@@ -10,7 +10,7 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
 
   const navigate = useNavigate();
 
-  console.log("user",user)
+  console.log("user", user);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -21,13 +21,11 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
 
-
-
-  useEffect(()=>{
-    if(user?.role=="admin"){
-     navigate('/admin')
+  useEffect(() => {
+    if (user?.role == "admin") {
+      navigate("/admin");
     }
-  },[user])
+  }, [user]);
 
   return (
     <header className="bg-[#FFFBF5]/70 border-b border-gray-200">
@@ -101,7 +99,9 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
 
           {user ? (
             <div className="hidden lg:flex items-center gap-4">
-              <span className="text-sm text-text-muted2 max-w-[180px] truncate">{user.email}</span>
+              <span className="text-sm text-text-muted2 max-w-[180px] truncate">
+                {user.email}
+              </span>
               <button
                 type="button"
                 onClick={logout}
@@ -120,16 +120,20 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
             </div>
           ) : (
             <div className="hidden lg:flex items-center gap-4">
-              <button type="button" onClick={onOpenLogin} className="text-sm font-medium text-navy hover:underline">
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-transparent min-w-[160px] px-[28px] py-[22px] text-[20px] no-underline transition border-3 border-[#E17100] group cursor-pointer leading-none text-brand-orange-dark hover:text-white hover:bg-brand-orange-dark"
+              >
                 Log in
               </button>
               <button
                 type="button"
-                  onClick={onStartPlaying}
-                className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full navy-gradient px-[28px] py-[23.5px] text-[20px] text-white! no-underline shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] leading-0 group cursor-pointer"
+                onClick={onStartPlaying}
+                className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full navy-gradient px-[28px] py-[23.5px] text-[20px] text-white! no-underline shadow-[0_1px_20px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] leading-0 group cursor-pointer"
               >
                 <span className="mb-0.5">{HEADER_CTA.label}</span>
-                <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300" />
+                <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300 " />
               </button>
             </div>
           )}
@@ -209,10 +213,15 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
 
             {user ? (
               <div className="mt-5 space-y-3">
-                <div className="text-center text-sm text-text-muted2 truncate">{user.email}</div>
+                <div className="text-center text-sm text-text-muted2 truncate">
+                  {user.email}
+                </div>
                 <button
                   type="button"
-                  onClick={() => { setIsMenuOpen(false); onStartPlaying?.(); }}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onStartPlaying?.();
+                  }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full navy-gradient px-6 py-4 text-base font-semibold text-white! shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] group max-w-[520px] mx-auto"
                 >
                   Play
@@ -220,26 +229,35 @@ export function LandingHeader({ onOpenLogin, onStartPlaying }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setIsMenuOpen(false); logout(); }}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    logout();
+                  }}
                   className="block w-full text-center text-sm text-brand-orange-dark underline"
                 >
                   Sign out
                 </button>
               </div>
             ) : (
-              <div className="mt-5 space-y-3">
+              <div className="mt-5 flex flex-col gap-3">
                 <button
                   type="button"
-                  onClick={() => { setIsMenuOpen(false); onStartPlaying?.(); }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full navy-gradient px-6 py-4 text-base font-semibold text-white! shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] group max-w-[520px] mx-auto"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onStartPlaying?.();
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full navy-gradient px-6 py-4 text-base font-semibold text-white! shadow-[0_16px_28px_rgba(0,0,0,0.3)] transition border-2 border-[#E17100] group max-w-[520px] !mx-auto"
                 >
                   {HEADER_CTA.label}
                   <IoArrowForwardOutline className="group-hover:translate-x-1 transition-transform duration-300 text-lg" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setIsMenuOpen(false); onOpenLogin?.(); }}
-                  className="block w-full text-center text-sm font-medium text-navy underline"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenLogin?.();
+                  }}
+                  className="inline-flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-transparent w-full max-w-[520px] !mx-auto px-[28px] py-4 text-md font-semibold no-underline transition border-2 border-[#E17100] group cursor-pointer leading-none text-brand-orange-dark hover:text-white hover:bg-brand-orange-dark"
                 >
                   Log in
                 </button>

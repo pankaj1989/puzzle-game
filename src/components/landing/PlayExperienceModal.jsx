@@ -12,7 +12,7 @@ import { useModalStack } from "../../hooks/useModalStack";
 
 export function PlayExperienceModal({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { user, startPremiumCheckout, refreshUser } = useAuth();
+  const { user, startPremiumCheckout, refreshUser, ensureGuestAuth } = useAuth();
   const isPremium = user?.plan === "premium";
   const [showGameStart, setShowGameStart] = useState(false);
   const [showCategorySelection, setShowCategorySelection] = useState(false);
@@ -60,6 +60,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     setError(null);
     setStarting(true);
     try {
+      if (!user) await ensureGuestAuth();
       const body = selectedCategory?.id
         ? { categoryId: selectedCategory.id }
         : {};
@@ -100,6 +101,7 @@ export function PlayExperienceModal({ isOpen, onClose }) {
     setError(null);
     setStarting(true);
     try {
+      if (!user) await ensureGuestAuth();
       await loadRandomCategoryPreview({ freePoolOnly: true });
       setPremiumPickerRandomFlow(false);
       setIsPremiumFlow(false);

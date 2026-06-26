@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const asyncHandler = require('../middleware/asyncHandler');
 const validate = require('../middleware/validate');
-const { authLimiter, magicLinkLimiter, magicLinkEmailLimiter } = require('../middleware/rateLimit');
-const { signupSchema, loginSchema, refreshSchema, magicLinkRequestSchema, magicLinkVerifySchema, googleSchema } = require('../validators/authValidators');
+const { authLimiter, magicLinkLimiter, magicLinkEmailLimiter, guestLimiter } = require('../middleware/rateLimit');
+const { signupSchema, loginSchema, refreshSchema, magicLinkRequestSchema, magicLinkVerifySchema, googleSchema, guestSchema } = require('../validators/authValidators');
 const authController = require('../controllers/authController');
 const authRequired = require('../middleware/authRequired');
 
@@ -13,6 +13,7 @@ router.post('/logout', authLimiter, validate(refreshSchema), asyncHandler(authCo
 router.post('/magic/request', magicLinkLimiter, magicLinkEmailLimiter, validate(magicLinkRequestSchema), asyncHandler(authController.magicRequest));
 router.post('/magic/verify', validate(magicLinkVerifySchema), asyncHandler(authController.magicVerify));
 router.post('/google', validate(googleSchema), asyncHandler(authController.google));
+router.post('/guest', guestLimiter, validate(guestSchema), asyncHandler(authController.guest));
 router.get('/me', authRequired(), asyncHandler(authController.me));
 
 module.exports = router;

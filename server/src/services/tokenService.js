@@ -5,9 +5,17 @@ const RefreshToken = require('../models/RefreshToken');
 
 function signAccessToken(user) {
   return jwt.sign(
-    { sub: user._id.toString(), role: user.role, plan: user.plan },
+    { sub: user._id.toString(), role: user.role, plan: user.plan, type: 'user' },
     env.JWT_ACCESS_SECRET,
     { expiresIn: env.JWT_ACCESS_TTL }
+  );
+}
+
+function signGuestAccessToken(guestId) {
+  return jwt.sign(
+    { sub: guestId, type: 'guest' },
+    env.JWT_ACCESS_SECRET,
+    { expiresIn: env.JWT_GUEST_TTL }
   );
 }
 
@@ -64,7 +72,9 @@ async function revokeAllForUser(userId) {
 }
 
 module.exports = {
-  signAccessToken, verifyAccessToken,
+  signAccessToken,
+  signGuestAccessToken,
+  verifyAccessToken,
   issueRefreshToken, rotateRefreshToken, revokeRefreshToken,
   revokeAllForUser,
 };

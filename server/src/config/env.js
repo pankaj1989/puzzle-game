@@ -14,6 +14,7 @@ const schema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
+  JWT_GUEST_TTL: z.string().default('7d'),
   SENDGRID_API_KEY: z.string().min(1),
   SENDGRID_FROM_EMAIL: z.email(),
   SENDGRID_FROM_NAME: z.string().min(1),

@@ -36,7 +36,8 @@ function serializeCategorySummary(category) {
 function serializeSession(session) {
   return {
     id: session._id,
-    userId: session.userId,
+    userId: session.userId || null,
+    guestId: session.guestId || null,
     puzzleId: session.puzzleId,
     startedAt: session.startedAt,
     completedAt: session.completedAt,
@@ -48,9 +49,21 @@ function serializeSession(session) {
   };
 }
 
+function assertSessionAccess(session, req) {
+  if (req.isGuest) {
+    if (!session.guestId || session.guestId !== req.guestId) {
+      throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
+    }
+    return;
+  }
+  if (!session.userId || session.userId.toString() !== req.user._id.toString()) {
+    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
+  }
+}
+
 async function startSession(req, res) {
   const { categoryId } = req.body;
-  const isFree = req.user.plan !== 'premium';
+  const isFree = req.isGuest || req.user.plan !== 'premium';
 
   let requestedCategory = null;
   if (categoryId) {
@@ -75,7 +88,8 @@ async function startSession(req, res) {
   }
 
   const session = await GameSession.create({
-    userId: req.user._id,
+    userId: req.isGuest ? null : req.user._id,
+    guestId: req.isGuest ? req.guestId : null,
     puzzleId: puzzle._id,
   });
 
@@ -93,9 +107,7 @@ async function submitGuess(req, res) {
   if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
   const session = await GameSession.findById(req.params.id);
   if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
-  if (session.userId.toString() !== req.user._id.toString()) {
-    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
-  }
+  assertSessionAccess(session, req);
   if (session.completedAt) throw new HttpError(409, 'Session already completed', 'SESSION_COMPLETED');
 
   const puzzle = await Puzzle.findById(session.puzzleId);
@@ -127,17 +139,19 @@ async function submitGuess(req, res) {
   session.finalGuess = normalizedGuess;
   await session.save();
 
-  const streakUpdate = computeStreakUpdate({
-    lastPlayedDay: req.user.lastPlayedDay,
-    currentStreak: req.user.currentStreak,
-    longestStreak: req.user.longestStreak,
-    now: new Date(),
-  });
-  req.user.currentStreak = streakUpdate.currentStreak;
-  req.user.longestStreak = streakUpdate.longestStreak;
-  req.user.lastPlayedDay = streakUpdate.lastPlayedDay;
-  req.user.totalScore = (req.user.totalScore || 0) + score;
-  await req.user.save();
+  if (!req.isGuest) {
+    const streakUpdate = computeStreakUpdate({
+      lastPlayedDay: req.user.lastPlayedDay,
+      currentStreak: req.user.currentStreak,
+      longestStreak: req.user.longestStreak,
+      now: new Date(),
+    });
+    req.user.currentStreak = streakUpdate.currentStreak;
+    req.user.longestStreak = streakUpdate.longestStreak;
+    req.user.lastPlayedDay = streakUpdate.lastPlayedDay;
+    req.user.totalScore = (req.user.totalScore || 0) + score;
+    await req.user.save();
+  }
 
   res.json({
     solved: true,
@@ -152,9 +166,7 @@ async function requestHint(req, res) {
   if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
   const session = await GameSession.findById(req.params.id);
   if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
-  if (session.userId.toString() !== req.user._id.toString()) {
-    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
-  }
+  assertSessionAccess(session, req);
   if (session.completedAt) throw new HttpError(409, 'Session already completed', 'SESSION_COMPLETED');
 
   const puzzle = await Puzzle.findById(session.puzzleId);
@@ -190,9 +202,7 @@ async function getSession(req, res) {
   if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
   const session = await GameSession.findById(req.params.id);
   if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
-  if (session.userId.toString() !== req.user._id.toString()) {
-    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
-  }
+  assertSessionAccess(session, req);
   const puzzle = await Puzzle.findById(session.puzzleId);
   if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
   const categoryDoc = await Category.findById(puzzle.categoryId).lean();
@@ -208,9 +218,7 @@ async function getShare(req, res) {
   if (!idCheck.success) throw new HttpError(400, 'Invalid session id', 'INVALID_ID');
   const session = await GameSession.findById(req.params.id);
   if (!session) throw new HttpError(404, 'Session not found', 'NOT_FOUND');
-  if (session.userId.toString() !== req.user._id.toString()) {
-    throw new HttpError(403, 'Forbidden', 'FORBIDDEN');
-  }
+  assertSessionAccess(session, req);
   const puzzle = await Puzzle.findById(session.puzzleId);
   if (!puzzle) throw new HttpError(404, 'Puzzle not found', 'NOT_FOUND');
   const text = buildShareText({

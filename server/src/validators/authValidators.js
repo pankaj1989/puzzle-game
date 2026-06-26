@@ -25,6 +25,10 @@ const magicLinkVerifySchema = z.object({ token: z.string().min(1) });
 
 const googleSchema = z.object({ idToken: z.string().min(1) });
 
+const guestSchema = z.object({
+  guestId: z.string().uuid().optional(),
+});
+
 module.exports = {
   signupSchema,
   loginSchema,
@@ -32,4 +36,5 @@ module.exports = {
   magicLinkRequestSchema,
   magicLinkVerifySchema,
   googleSchema,
+  guestSchema,
 };

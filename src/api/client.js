@@ -1,4 +1,4 @@
-import { tokenStorage } from '../auth/storage';
+import { tokenStorage, guestStorage } from '../auth/storage';
 
 const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -18,7 +18,7 @@ async function doFetch(path, { method = 'GET', body, headers = {}, skipAuth = fa
     finalHeaders['Content-Type'] = finalHeaders['Content-Type'] || 'application/json';
   }
   if (!skipAuth) {
-    const access = tokenStorage.getAccess();
+    const access = tokenStorage.getAccess() || guestStorage.getAccess();
     if (access) finalHeaders.Authorization = `Bearer ${access}`;
   }
   const res = await fetch(`${BASE}${path}`, {
@@ -76,7 +76,8 @@ async function refreshAccessToken() {
 
 export async function apiRequest(path, opts = {}) {
   let res = await doFetch(path, opts);
-  if (res.status === 401 && !opts.skipAuth && tokenStorage.getRefresh()) {
+  const hasUserRefresh = Boolean(tokenStorage.getRefresh());
+  if (res.status === 401 && !opts.skipAuth && hasUserRefresh) {
     try {
       await refreshAccessToken();
       res = await doFetch(path, opts);

@@ -4,6 +4,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import { api } from '../api/client';
 import { getUserFriendlyApiMessage } from '../api/apiErrors';
 import { PremiumAdModal } from '../components/common/PremiumAdModal';
+import { useAuth } from '../auth/AuthContext';
 import AdSlot from '../ads/AdSlot';
 
 export function GamePlay() {
@@ -102,6 +103,7 @@ export function GamePlay() {
 
 function GameScreen({ initialSession, puzzle }) {
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const [session, setSession] = useState(initialSession);
   const [guess, setGuess] = useState('');
   const [error, setError] = useState(null);
@@ -155,6 +157,7 @@ function GameScreen({ initialSession, puzzle }) {
         puzzle={puzzle}
         session={session}
         onPlayAgain={goHomePlay}
+        isGuest={isGuest}
       />
     );
   }
@@ -166,6 +169,7 @@ function GameScreen({ initialSession, puzzle }) {
         puzzle={puzzle}
         session={session}
         onPlayAgain={goHomePlay}
+        isGuest={isGuest}
       />
     );
   }
@@ -274,7 +278,7 @@ function GameScreen({ initialSession, puzzle }) {
   );
 }
 
-function ResultScreen({ result, puzzle, session, onPlayAgain }) {
+function ResultScreen({ result, puzzle, session, onPlayAgain, isGuest = false }) {
   const [shareText, setShareText] = useState(null);
   const [copied, setCopied] = useState(false);
   const [shareError, setShareError] = useState(null);
@@ -343,6 +347,15 @@ function ResultScreen({ result, puzzle, session, onPlayAgain }) {
         {shareError && <div className="mb-6 text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{shareError}</div>}
 
         <AdSlot slot="9876543210" className="mb-6" />
+
+        {isGuest && (
+          <p className="mb-4 text-sm text-text-muted2">
+            <Link to="/?auth=signup" className="text-brand-orange-dark underline font-medium">
+              Create an account
+            </Link>
+            {' '}to save scores and unlock category selection.
+          </p>
+        )}
 
         <button
           type="button"

@@ -5,24 +5,26 @@ const authRequired = require('../middleware/authRequired');
 const { startSessionSchema, guessSchema } = require('../validators/sessionValidators');
 const controller = require('../controllers/sessionController');
 
+const sessionAuth = authRequired({ allowGuest: true });
+
 router.post(
   '/start',
-  authRequired(),
+  sessionAuth,
   validate(startSessionSchema),
   asyncHandler(controller.startSession)
 );
 
 router.post(
   '/:id/guess',
-  authRequired(),
+  sessionAuth,
   validate(guessSchema),
   asyncHandler(controller.submitGuess)
 );
 
-router.post('/:id/hint', authRequired(), asyncHandler(controller.requestHint));
+router.post('/:id/hint', sessionAuth, asyncHandler(controller.requestHint));
 
 router.get('/me', authRequired(), asyncHandler(controller.listMySessions));
-router.get('/:id/share', authRequired(), asyncHandler(controller.getShare));
-router.get('/:id', authRequired(), asyncHandler(controller.getSession));
+router.get('/:id/share', sessionAuth, asyncHandler(controller.getShare));
+router.get('/:id', sessionAuth, asyncHandler(controller.getSession));
 
 module.exports = router;

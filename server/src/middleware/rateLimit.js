@@ -35,4 +35,5 @@ module.exports = {
   magicLinkLimiter: createLimiter({ windowMs: 60 * 60 * 1000, max: 5 }),
   magicLinkEmailLimiter,
   generalLimiter: createLimiter({ windowMs: 15 * 60 * 1000, max: 300 }),
+  guestLimiter: createLimiter({ windowMs: 60 * 60 * 1000, max: 30, code: 'GUEST_RATE_LIMITED' }),
 };

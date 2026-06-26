@@ -7,7 +7,7 @@ import { BillingSuccessPage } from './pages/BillingSuccessPage';
 import { LeaderboardsPage } from './pages/LeaderboardsPage';
 import { AuthProvider } from './auth/AuthContext';
 import GoogleProvider from './auth/GoogleProvider';
-import ProtectedRoute from './auth/ProtectedRoute';
+import PlayRoute from './auth/PlayRoute';
 import AdminRoute from './admin/AdminRoute';
 import AdminLayout from './admin/AdminLayout';
 import { DashboardPage } from './pages/admin/DashboardPage';
@@ -27,25 +27,25 @@ export default function App() {
           <Route
             path="/game-start"
             element={
-              <ProtectedRoute>
+              <PlayRoute>
                 <GameStart />
-              </ProtectedRoute>
+              </PlayRoute>
             }
           />
           <Route
             path="/game/:sessionId"
             element={
-              <ProtectedRoute>
+              <PlayRoute>
                 <GamePlay />
-              </ProtectedRoute>
+              </PlayRoute>
             }
           />
           <Route
             path="/game"
             element={
-              <ProtectedRoute>
+              <PlayRoute>
                 <GamePlay />
-              </ProtectedRoute>
+              </PlayRoute>
             }
           />
           <Route

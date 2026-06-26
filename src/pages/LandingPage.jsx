@@ -14,7 +14,7 @@ import { LoginPage } from './LoginPage.jsx'
 import { SignupPage } from './SignupPage.jsx'
 
 export function LandingPage() {
-  const { user } = useAuth()
+  const { user, ensureGuestAuth } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [authModal, setAuthModal] = useState(null)
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false)
@@ -28,12 +28,15 @@ export function LandingPage() {
 
   useEffect(() => {
     if (searchParams.get('play') === '1') {
+      if (!user) {
+        ensureGuestAuth().catch(() => {});
+      }
       setIsPlayModalOpen(true)
       const next = new URLSearchParams(searchParams)
       next.delete('play')
       setSearchParams(next, { replace: true })
     }
-  }, [searchParams, setSearchParams])
+  }, [searchParams, setSearchParams, user, ensureGuestAuth])
 
   useEffect(() => {
     if (user && authModal) {
@@ -51,11 +54,10 @@ export function LandingPage() {
   }
 
   function handleStartPlaying() {
-    if (user) {
-      setIsPlayModalOpen(true)
-      return
+    if (!user) {
+      ensureGuestAuth().catch(() => {});
     }
-    setAuthModal('signup')
+    setIsPlayModalOpen(true)
   }
 
   return (

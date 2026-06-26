@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { PremiumPaymentModal } from '../components/common/PremiumPaymentModal';
-import { tokenStorage, userStorage } from './storage';
+import { tokenStorage, userStorage, guestStorage } from './storage';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStorage.get());
+  const [guestReady, setGuestReady] = useState(() => Boolean(guestStorage.getAccess()));
   const [loading, setLoading] = useState(true);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const paymentSuccessRef = useRef(null);
@@ -37,6 +38,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const completeAuth = useCallback((payload) => {
+    guestStorage.clear();
+    setGuestReady(false);
     tokenStorage.setTokens({
       accessToken: payload.accessToken,
       refreshToken: payload.refreshToken,
@@ -44,6 +47,19 @@ export function AuthProvider({ children }) {
     userStorage.set(payload.user);
     setUser(payload.user);
   }, []);
+
+  const ensureGuestAuth = useCallback(async () => {
+    if (user || tokenStorage.getAccess()) return true;
+    const existingId = guestStorage.getId();
+    const data = await api.post(
+      '/auth/guest',
+      existingId ? { guestId: existingId } : {},
+      { skipAuth: true }
+    );
+    guestStorage.set({ guestId: data.guestId, accessToken: data.accessToken });
+    setGuestReady(true);
+    return true;
+  }, [user]);
 
   const signup = useCallback(
     async (payload) => {
@@ -89,6 +105,8 @@ export function AuthProvider({ children }) {
       // ignore — local sign-out still happens
     }
     tokenStorage.clear();
+    guestStorage.clear();
+    setGuestReady(false);
     setUser(null);
   }, []);
 
@@ -128,9 +146,12 @@ export function AuthProvider({ children }) {
     [openPremiumPayment]
   );
 
+  const isGuest = !user && guestReady;
+
   const value = {
     user,
     loading,
+    isGuest,
     signup,
     login,
     verifyMagicLink,
@@ -139,6 +160,7 @@ export function AuthProvider({ children }) {
     openPremiumPayment,
     startPremiumCheckout,
     refreshUser,
+    ensureGuestAuth,
   };
 
   return (
