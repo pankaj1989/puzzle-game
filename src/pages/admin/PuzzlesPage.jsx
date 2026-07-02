@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { adminApi } from '../../admin/api';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { adminApi } from "../../admin/api";
 
 const EMPTY = {
-  plate: '',
-  answer: '',
-  categoryId: '',
-  difficulty: 'easy',
-  clue: '',
+  plate: "",
+  answer: "",
+  categoryId: "",
+  difficulty: "easy",
+  clue: "",
   basePoints: 100,
   timeLimitSeconds: 60,
   //isPremium: false,
@@ -17,11 +17,16 @@ export function PuzzlesPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
-  const [categoryId, setCategoryId] = useState('');
-  const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState("");
+  const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const importFileRef = useRef(null);
 
   async function load() {
     try {
@@ -52,23 +57,24 @@ export function PuzzlesPage() {
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter((r) =>
-      r.plate.toLowerCase().includes(q) || r.answer.toLowerCase().includes(q)
+    return rows.filter(
+      (r) =>
+        r.plate.toLowerCase().includes(q) || r.answer.toLowerCase().includes(q),
     );
   }, [rows, search]);
 
   function openNew() {
-    setEditing('new');
+    setEditing("new");
     setForm(EMPTY);
     setError(null);
   }
 
   async function openEdit(id) {
     setError(null);
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
     try {
       const { puzzle } = await adminApi.getPuzzle(id);
       setEditing(id);
@@ -80,7 +86,7 @@ export function PuzzlesPage() {
         clue: puzzle.clue,
         basePoints: puzzle.basePoints,
         timeLimitSeconds: puzzle.timeLimitSeconds,
-       // isPremium: puzzle.isPremium,
+        // isPremium: puzzle.isPremium,
       });
     } catch (err) {
       setError(err.message);
@@ -98,10 +104,9 @@ export function PuzzlesPage() {
       clue: form.clue.trim(),
       basePoints: Number(form.basePoints),
       timeLimitSeconds: Number(form.timeLimitSeconds),
-      
     };
     try {
-      if (editing === 'new') await adminApi.createPuzzle(body);
+      if (editing === "new") await adminApi.createPuzzle(body);
       else await adminApi.updatePuzzle(editing, body);
       setEditing(null);
       setForm(EMPTY);
@@ -121,16 +126,63 @@ export function PuzzlesPage() {
     }
   }
 
+  function openImport() {
+    setImportOpen(true);
+    setImportFile(null);
+    setImportResult(null);
+    setError(null);
+  }
+
+  function downloadTemplate() {
+    const header = "plate,answer,category,difficulty,clue,basePoints,timeLimitSeconds,isPremium\n";
+    const sample =
+      'LV2MRO,love tomorrow,Movies,easy,A romantic outlook on the next day,100,60,false\n';
+    const blob = new Blob([header + sample], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "puzzle-import-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function submitImport(e) {
+    e.preventDefault();
+    if (!importFile || importBusy) return;
+    setImportBusy(true);
+    setError(null);
+    setImportResult(null);
+    try {
+      const { summary } = await adminApi.importPuzzles(importFile);
+      setImportResult(summary);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-serif text-navy">Puzzles</h1>
-        <button
-          onClick={openNew}
-          className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange"
-        >
-          New puzzle
-        </button>
+        <div>
+          <button
+            onClick={openNew}
+            className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange"
+          >
+            New puzzle
+          </button>
+
+          <button
+            type="button"
+            onClick={openImport}
+            className="ml-2 py-2 px-4 rounded border-2 border-brand-orange text-navy bg-white hover:bg-cream"
+          >
+            Bulk Import
+          </button>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -159,8 +211,8 @@ export function PuzzlesPage() {
         {(search || categoryId) && (
           <button
             onClick={() => {
-              setSearch('');
-              setCategoryId('');
+              setSearch("");
+              setCategoryId("");
               setPage(1);
             }}
             className="text-sm text-brand-orange-dark underline"
@@ -171,7 +223,125 @@ export function PuzzlesPage() {
       </div>
 
       {error && (
-        <div className="text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">{error}</div>
+        <div className="text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
+          {error}
+        </div>
+      )}
+
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white border border-card-gray2 shadow-xl p-5">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-serif text-navy">Bulk import puzzles</h2>
+                <p className="text-sm text-text-muted2 mt-1">
+                  Upload a CSV or Excel file (.csv, .xlsx, .xls).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImportOpen(false)}
+                className="text-text-muted2 hover:text-navy"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-text-muted2 mb-3">
+              Required columns: <code className="text-navy">plate</code>,{" "}
+              <code className="text-navy">answer</code>,{" "}
+              <code className="text-navy">category</code>,{" "}
+              <code className="text-navy">difficulty</code>,{" "}
+              <code className="text-navy">clue</code>. Optional:{" "}
+              <code className="text-navy">basePoints</code>,{" "}
+              <code className="text-navy">timeLimitSeconds</code>,{" "}
+              <code className="text-navy">isPremium</code>.
+            </p>
+
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className="text-sm text-brand-orange-dark underline mb-4"
+            >
+              Download CSV template
+            </button>
+
+            {importResult && (
+                <div className="rounded-lg border border-card-gray2 bg-cream/40 p-3 text-sm space-y-2 mb-4">
+                  <p>
+                    <strong>{importResult.created}</strong> created ·{" "}
+                    <strong>{importResult.updated}</strong> updated ·{" "}
+                    <strong>{importResult.failed}</strong> failed
+                  </p>
+                  {importResult.errors?.length > 0 && (
+                    <ul className="max-h-40 overflow-y-auto text-red-700 space-y-1">
+                      {importResult.errors.slice(0, 20).map((item) => (
+                        <li key={`${item.row}-${item.plate || "err"}`}>
+                          Row {item.row}
+                          {item.plate ? ` (${item.plate})` : ""}:{" "}
+                          {(item.messages || [item.message]).join("; ")}
+                        </li>
+                      ))}
+                      {importResult.errors.length > 20 && (
+                        <li>…and {importResult.errors.length - 20} more</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+            <form onSubmit={submitImport} className="space-y-4">
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+                  <div className="flex items-center justify-between gap-4">
+                <span className="text-text-muted2 truncate">
+                  {importFile ? importFile.name : "No file selected"}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => importFileRef.current.click()}
+                    className="block  border border-card-gray2 rounded-md px-2 py-1 w-fit bg-amber-400 cursor-pointer hover:bg-amber-500"
+                  >
+                    Browse
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!importFile || importBusy}
+                    className="py-1 px-3 rounded-md navy-gradient text-cream border-2 border-brand-orange disabled:opacity-50"
+                  >
+                    {importBusy ? "Importing…" : "Import"}
+                  </button>
+                </div>
+              </div>
+
+             
+
+              {/* <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(false)}
+                  className="py-2 px-4 rounded border border-navy text-navy"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={!importFile || importBusy}
+                  className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange disabled:opacity-50"
+                >
+                  {importBusy ? "Importing…" : "Import"}
+                </button>
+              </div> */}
+            </form>
+          </div>
+        </div>
       )}
 
       {editing && (
@@ -249,7 +419,9 @@ export function PuzzlesPage() {
               type="number"
               className="w-full border rounded px-2 py-1"
               value={form.timeLimitSeconds}
-              onChange={(e) => setForm({ ...form, timeLimitSeconds: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, timeLimitSeconds: e.target.value })
+              }
             />
           </label>
           {/* <label className="flex items-center gap-2">
@@ -261,7 +433,10 @@ export function PuzzlesPage() {
             Premium
           </label> */}
           <div className="sm:col-span-3 flex gap-2">
-            <button type="submit" className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange">
+            <button
+              type="submit"
+              className="py-2 px-4 rounded navy-gradient text-cream border-2 border-brand-orange"
+            >
               Save
             </button>
             <button
@@ -285,7 +460,7 @@ export function PuzzlesPage() {
             <th className="p-3">Answer</th>
             <th className="p-3">Category</th>
             <th className="p-3">Difficulty</th>
-           
+
             <th className="p-3"></th>
           </tr>
         </thead>
@@ -294,9 +469,9 @@ export function PuzzlesPage() {
             <tr key={r._id} className="border-t border-card-gray2">
               <td className="p-3 font-mono">{r.plate}</td>
               <td className="p-3">{r.answer}</td>
-              <td className="p-3">{categoryById[r.categoryId]?.name || '—'}</td>
+              <td className="p-3">{categoryById[r.categoryId]?.name || "—"}</td>
               <td className="p-3">{r.difficulty}</td>
-              
+
               <td className="p-3 text-right">
                 <button
                   onClick={() => openEdit(r._id)}
@@ -304,7 +479,10 @@ export function PuzzlesPage() {
                 >
                   Edit
                 </button>
-                <button onClick={() => remove(r)} className="text-red-600 underline text-sm">
+                <button
+                  onClick={() => remove(r)}
+                  className="text-red-600 underline text-sm"
+                >
                   Delete
                 </button>
               </td>
@@ -312,7 +490,10 @@ export function PuzzlesPage() {
           ))}
           {filteredRows.length === 0 && (
             <tr>
-              <td colSpan={6} className="p-6 text-center text-text-muted2 text-sm">
+              <td
+                colSpan={6}
+                className="p-6 text-center text-text-muted2 text-sm"
+              >
                 No puzzles match.
               </td>
             </tr>
@@ -335,7 +516,9 @@ export function PuzzlesPage() {
         >
           Next
         </button>
-        <span className="text-text-muted2">{total} total{search && ` · ${filteredRows.length} match search`}</span>
+        <span className="text-text-muted2">
+          {total} total{search && ` · ${filteredRows.length} match search`}
+        </span>
       </div>
     </div>
   );

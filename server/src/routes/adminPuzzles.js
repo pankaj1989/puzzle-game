@@ -4,9 +4,11 @@ const validate = require('../middleware/validate');
 const authRequired = require('../middleware/authRequired');
 const { createPuzzleSchema, updatePuzzleSchema } = require('../validators/adminPuzzleValidators');
 const controller = require('../controllers/adminPuzzleController');
+const { uploadPuzzleImport } = require('../middleware/puzzleImportUpload');
 
 router.use(authRequired({ roles: ['admin'] }));
 router.get('/', asyncHandler(controller.list));
+router.post('/import', uploadPuzzleImport, asyncHandler(controller.importBulk));
 router.get('/:id', asyncHandler(controller.getOne));
 router.post('/', validate(createPuzzleSchema), asyncHandler(controller.create));
 router.patch('/:id', validate(updatePuzzleSchema), asyncHandler(controller.update));

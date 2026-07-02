@@ -1,5 +1,6 @@
 const Puzzle = require('../models/Puzzle');
 const Category = require('../models/Category');
+const { importPuzzlesFromBuffer } = require('../services/puzzleImportService');
 const { HttpError } = require('../middleware/errorHandler');
 const { listPuzzlesQuery, mongoId } = require('../validators/adminPuzzleValidators');
 
@@ -51,4 +52,12 @@ async function remove(req, res) {
   res.status(204).end();
 }
 
-module.exports = { list, getOne, create, update, remove };
+async function importBulk(req, res) {
+  if (!req.file?.buffer) {
+    throw new HttpError(400, 'Upload a CSV or Excel file', 'MISSING_IMPORT_FILE');
+  }
+  const summary = await importPuzzlesFromBuffer(req.file.buffer);
+  res.status(200).json({ summary });
+}
+
+module.exports = { list, getOne, create, update, remove, importBulk };

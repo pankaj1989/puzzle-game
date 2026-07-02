@@ -2,6 +2,7 @@ const Category = require('../models/Category');
 const Puzzle = require('../models/Puzzle');
 const { HttpError } = require('../middleware/errorHandler');
 const { serializeCategory, toStoredImagePath } = require('../services/categorySerializer');
+const { importCategoriesFromBuffer } = require('../services/categoryImportService');
 
 async function list(req, res) {
   const categories = await Category.find().sort({ name: 1 });
@@ -42,4 +43,13 @@ async function remove(req, res) {
   res.status(204).end();
 }
 
-module.exports = { list, create, update, remove };
+async function importBulk(req, res) {
+  if (!req.file?.buffer) {
+    throw new HttpError(400, 'Upload a CSV or Excel file', 'MISSING_IMPORT_FILE');
+  }
+  const summary = await importCategoriesFromBuffer(req.file.buffer);
+  res.status(200).json({ summary });
+}
+
+
+module.exports = { list, create, update, remove, importBulk };
